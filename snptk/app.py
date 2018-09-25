@@ -41,7 +41,9 @@ def snpid_from_coord(args):
             if len(db[k]) > 1:
                 snptk.util.debug(f'Has more than one snp_id db[{k}] = {str(db[k])}')
             else:
-                entry['snp_id'] = db[k][0]
+                if db[k][0] != entry['snp_id']:
+                    snptk.util.debug(f'Rewrote snp_id {entry["snp_id"]} to {db[k][0]} for position {k}')
+                    entry['snp_id'] = db[k][0]
 
         else:
             snptk.util.debug('NO_MATCH: ' + '\t'.join(entry.values()))
