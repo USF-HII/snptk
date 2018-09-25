@@ -1,0 +1,65 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+usage() {
+  echo "Usage: $(basename $0) [-h|-v] <input_file> <output_dir> [number_splits]" 1>&2
+  exit 1
+}
+
+myopts=$(getopt --options v,h --longoptions verbose,help -- "$@" ) || usage
+
+eval set -- "${myopts}"
+
+while true; do
+  case $1 in
+    -h|--help) usage;;
+    -v|--verbose) OPT_VERBOSE="true"; shift;;
+    --) shift; break;;
+    *) break;;
+  esac
+  shift
+done
+
+if [[ $# -lt 2 || $# -gt 3 ]]; then
+  usage
+fi
+
+input_file=${1}
+output_dir=${2}
+number_splits=${3:-$(nproc)}
+
+if [[ ${input_file} = *.gz ]] ; then
+  cat="zcat"
+else
+  cat="cat"
+fi
+
+if [[ -d ${output_dir} && $(ls ${output_dir} | wc -l) -gt 0 ]]; then
+  echo "Error: $(basename $0) - output_dir '${output_dir}' not empty. Exiting." 1>&2
+  exit 1
+fi
+
+[[ -d ${output_dir} ]] || mkdir -vp ${output_dir}
+
+echo "Calculating size of ${input_file} in bytes..." 1>&2
+
+bytes=$(${cat} ${input_file} | wc -c)
+
+# Use an offset padding to avoid a small last file
+offset=10000
+
+bytes_per_section=$(echo "${bytes}/${number_splits} + ${offset}" | bc)
+
+
+echo "Splitting file into ${number_splits} splits in directory ${output_dir}..." 1>&2
+
+${cat} ${input_file} \
+  | split \
+      --numeric-suffixes \
+      --line-bytes=${bytes_per_section} \
+      --filter='gzip > $FILE' \
+      - \
+      ${output_dir}/
+
+echo "Complete" 1>&2
