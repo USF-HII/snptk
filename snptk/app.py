@@ -5,6 +5,36 @@ from concurrent.futures import ProcessPoolExecutor
 import snptk.core
 import snptk.util
 
+def update_snpid_and_position(args):
+    bim_fname = args['bim']
+    dbsnp_fname = args['dbsnp']
+
+    snp_ids = set()
+
+    bim_entries = snptk.core.load_bim(bim_fname)
+
+    for entry in bim_entries:
+        snp_ids.add(entry['snp_id'])
+
+    db = {}
+
+    if os.path.isdir(dbsnp_fname):
+        jobs = []
+        dbsnp_fnames = [os.path.join(dbsnp_fname, f) for f in os.listdir(dbsnp_fname)]
+
+        with ProcessPoolExecutor(len(dbsnp_fnames)) as p:
+            for fname in dbsnp_fnames:
+                jobs.append(p.submit(snptk.core.load_dbsnp_by_snp_id, fname, snp_ids))
+
+        for job in jobs:
+            for k, v in job.result().items():
+                db.setdefault(k, []).extend(v)
+    else:
+        db = snptk.core.load_dbsnp_by_snp_id(dbsnp_fname, snp_ids)
+
+    print(db)
+
+
 def snpid_from_coord(args):
     snptk.util.debug(f'snpid_from_coord: {args}', 1)
 

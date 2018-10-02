@@ -25,10 +25,16 @@ def main():
     parser_snpid_from_coord.add_argument('-d', '--dbsnp')
 
     #-----------------------------------------------------------------------------------------------------
-    # update-snpids
+    # update-snpid-and-position
     #-----------------------------------------------------------------------------------------------------
 
-    # parser_update_snpids = subparsers.add_parser('update-snpids', help='Update snpids')
+    parser_update_snpids = subparsers.add_parser('update-snpid-and-position', help='Update snpid and position')
+
+    parser_update_snpids.set_defaults(func=snptk.app.update_snpid_and_position)
+
+    parser_update_snpids.add_argument('bim')
+
+    parser_update_snpids.add_argument('-d', '--dbsnp')
 
     #-----------------------------------------------------------------------------------------------------
     # parse
