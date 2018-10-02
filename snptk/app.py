@@ -1,4 +1,5 @@
 import os
+import sys
 
 from concurrent.futures import ProcessPoolExecutor
 
@@ -16,21 +17,9 @@ def update_snpid_and_position(args):
     for entry in bim_entries:
         snp_ids.add(entry['snp_id'])
 
-    db = {}
+    #snp_history = snptk.core.load_snp_history('/shares/hii/bioinfo/ref/ncbi/human_9606/current/SNPHistory.bcp.gz')
 
-    if os.path.isdir(dbsnp_fname):
-        jobs = []
-        dbsnp_fnames = [os.path.join(dbsnp_fname, f) for f in os.listdir(dbsnp_fname)]
-
-        with ProcessPoolExecutor(len(dbsnp_fnames)) as p:
-            for fname in dbsnp_fnames:
-                jobs.append(p.submit(snptk.core.load_dbsnp_by_snp_id, fname, snp_ids))
-
-        for job in jobs:
-            for k, v in job.result().items():
-                db.setdefault(k, []).extend(v)
-    else:
-        db = snptk.core.load_dbsnp_by_snp_id(dbsnp_fname, snp_ids)
+    db = snptk.core.load_dbsnp_by_snp_id(dbsnp_fname, snp_ids)
 
     print(db)
 

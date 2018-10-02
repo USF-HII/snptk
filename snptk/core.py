@@ -2,6 +2,7 @@
 
 import gzip
 import sys
+import os
 
 import snptk.util
 
@@ -13,6 +14,16 @@ def update_snp_id():
     """
     pass
 
+def load_snp_history(fname):
+    snp_history = set()
+
+    with gzip.open(fname, 'rt', encoding='utf-8') as f:
+        for line in f:
+            if line.lower().find('re-activ') < 0:
+                fields = line.strip().split('\t')
+                snp_history.add(fields[0])
+
+    return snp_history
 
 def load_bim(fname):
     """
@@ -39,7 +50,26 @@ def load_bim(fname):
 
     return entries
 
-def load_dbsnp_by_snp_id(fname, snp_ids, offset=1):
+def load_dbsnp_by_snp_id(fname, snp_ids):
+    db = {}
+
+    if os.path.isdir(fname):
+        jobs = []
+        fnames = [os.path.join(fname, f) for f in os.listdir(fname)]
+
+        with ProcessPoolExecutor(len(fnames)) as p:
+            for fname in fnames:
+                jobs.append(p.submit(load_dbsnp_by_snp_id_exec, fname, snp_ids))
+
+        for job in jobs:
+            for k, v in job.result().items():
+                db.setdefault(k, []).extend(v)
+    else:
+        db = load_dbsnp_by_snp_id_exec(fname, snp_ids)
+
+    return db
+
+def load_dbsnp_by_snp_id_exec(fname, snp_ids, offset=1):
     """
     Read in NCBI dbSNP and return subset of entries keyed by SNP Id. E.g.:
 
