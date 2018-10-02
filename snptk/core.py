@@ -4,6 +4,8 @@ import gzip
 import sys
 import os
 
+from concurrent.futures import ProcessPoolExecutor
+
 import snptk.util
 
 def update_snp_id():
@@ -62,8 +64,7 @@ def load_dbsnp_by_snp_id(fname, snp_ids):
                 jobs.append(p.submit(load_dbsnp_by_snp_id_exec, fname, snp_ids))
 
         for job in jobs:
-            for k, v in job.result().items():
-                db.setdefault(k, []).extend(v)
+            db.update(job.result())
     else:
         db = load_dbsnp_by_snp_id_exec(fname, snp_ids)
 

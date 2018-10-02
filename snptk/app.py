@@ -1,8 +1,6 @@
 import os
 import sys
 
-from concurrent.futures import ProcessPoolExecutor
-
 import snptk.core
 import snptk.util
 
