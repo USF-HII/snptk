@@ -35,7 +35,7 @@ def update_snpid_and_position(args):
     print ('SNP ids removed: ')
     print(updated_snp_ids.difference(snp_ids))
 
-    db = snptk.core.load_dbsnp_by_snp_id(dbsnp_fname, updated_snp_ids)
+    db = snptk.core.execute_load(snptk.core.load_dbsnp_by_snp_id, dbsnp_fname, updated_snp_ids, merge_method='update')
 
     #update snp id and position
 
@@ -54,21 +54,7 @@ def snpid_from_coord(args):
     for entry in bim_entries:
         coordinates.add(entry['chromosome'] + ':' + entry['position'])
 
-    db = {}
-
-    if os.path.isdir(dbsnp_fname):
-        jobs = []
-        dbsnp_fnames = [os.path.join(dbsnp_fname, f) for f in os.listdir(dbsnp_fname)]
-
-        with ProcessPoolExecutor(len(dbsnp_fnames)) as p:
-            for fname in dbsnp_fnames:
-                jobs.append(p.submit(snptk.core.load_dbsnp_by_coordinate, fname, coordinates))
-
-        for job in jobs:
-            for k, v in job.result().items():
-                db.setdefault(k, []).extend(v)
-    else:
-        db = snptk.core.load_dbsnp_by_coordinate(dbsnp_fname, coordinates)
+    db = snptk.core.execute_load(snptk.core.load_dbsnp_by_coordinate, dbsnp_fname, coordinates, merge_method='extend')
 
     for entry in bim_entries:
         k = entry['chromosome'] + ':' + entry['position']

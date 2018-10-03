@@ -8,6 +8,41 @@ from concurrent.futures import ProcessPoolExecutor
 
 import snptk.util
 
+def execute_load(load_func, fname, filter_set, merge_method='update'):
+    """
+    Accepts a load_* function pointer, fname, and arguments and executes using a ProcessPoolExecutor()
+    if the fname is a directory, otherwise call the function_pointer directly.
+
+    The result will be either a dictionary with strings as keys or a list.
+    The code performs a simple merge of strings but uses extend to merge lists.
+    """
+    result = {}
+
+    if os.path.isdir(fname):
+        jobs = []
+        fnames = [os.path.join(fname, f) for f in os.listdir(fname)]
+
+        with ProcessPoolExecutor(len(fnames)) as p:
+            for fname in fnames:
+                jobs.append(p.submit(load_func, fname, filter_set))
+
+            for job in jobs:
+                if merge_method == 'update':
+                    result.update(job.result())
+
+                elif merge_method == 'extend':
+                    for k, v in job.result().items():
+                        result.setdefault(k, []).extend(v)
+
+                else:
+                    raise ValueError(f'Unknown merge method "{merge_method}"')
+
+    else:
+        result = load_func(fname, filter_set)
+
+    return result
+
+
 def update_snp_id(snp_id, snp_history, rs_merge):
     """
     Pass SNP Id and using RsMerge and SNPHistory return the merged SNP Id, the same if unchanged
@@ -126,25 +161,7 @@ def load_bim(fname):
 
     return entries
 
-def load_dbsnp_by_snp_id(fname, snp_ids):
-    db = {}
-
-    if os.path.isdir(fname):
-        jobs = []
-        fnames = [os.path.join(fname, f) for f in os.listdir(fname)]
-
-        with ProcessPoolExecutor(len(fnames)) as p:
-            for fname in fnames:
-                jobs.append(p.submit(load_dbsnp_by_snp_id_exec, fname, snp_ids))
-
-        for job in jobs:
-            db.update(job.result())
-    else:
-        db = load_dbsnp_by_snp_id_exec(fname, snp_ids)
-
-    return db
-
-def load_dbsnp_by_snp_id_exec(fname, snp_ids, offset=1):
+def load_dbsnp_by_snp_id(fname, snp_ids, offset=1):
     """
     Read in NCBI dbSNP and return subset of entries keyed by SNP Id. E.g.:
 
