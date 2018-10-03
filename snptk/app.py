@@ -1,25 +1,44 @@
 import os
 import sys
 
+from concurrent.futures import ProcessPoolExecutor
+
 import snptk.core
 import snptk.util
 
 def update_snpid_and_position(args):
     bim_fname = args['bim']
     dbsnp_fname = args['dbsnp']
+    snp_history_fname = args['snp_history']
+    rs_merge_fname = args['rs_merge']
 
     snp_ids = set()
 
     bim_entries = snptk.core.load_bim(bim_fname)
+    snp_history = snptk.core.load_snp_history(snp_history_fname)
+    rs_merge = snptk.core.load_rs_merge(rs_merge_fname)
 
     for entry in bim_entries:
         snp_ids.add(entry['snp_id'])
 
-    #snp_history = snptk.core.load_snp_history('/shares/hii/bioinfo/ref/ncbi/human_9606/current/SNPHistory.bcp.gz')
+    updated_snp_ids = set(snp_ids)
+    for snp_id in snp_ids:
+        updated_snp_id = snptk.core.update_snp_id(snp_id, snp_history, rs_merge)
 
-    db = snptk.core.load_dbsnp_by_snp_id(dbsnp_fname, snp_ids)
+        if updated_snp_id == 'deleted':
+            updated_snp_ids.remove(snp_id)
+        elif updated_snp_id == 'unchanged':
+            continue
+        else:
+            updated_snp_ids.add(updated_snp_id)
 
-    print(db)
+    print ('SNP ids removed: ')
+    print(updated_snp_ids.difference(snp_ids))
+
+    db = snptk.core.load_dbsnp_by_snp_id(dbsnp_fname, updated_snp_ids)
+
+    #update snp id and position
+
 
 
 def snpid_from_coord(args):

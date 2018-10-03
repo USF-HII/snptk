@@ -8,16 +8,90 @@ from concurrent.futures import ProcessPoolExecutor
 
 import snptk.util
 
-def update_snp_id():
+def update_snp_id(snp_id, snp_history, rs_merge):
     """
     Pass SNP Id and using RsMerge and SNPHistory return the merged SNP Id, the same if unchanged
     or None if the SNP has been removed by NCBI.
     RSMerge logic from UM example script: https://genome.sph.umich.edu/wiki/LiftRsNumber.py
     """
-    pass
+
+    if snp_id.startswith('rs'):
+        snp_id = snp_id[2:]
+
+    if snp_id not in rs_merge:
+        if snp_id not in snp_history:
+            return 'unchanged'
+        else:
+            return 'deleted'
+
+    while True:
+        if snp_id in rs_merge:
+            rs_low, rs_current = rs_merge[snp_id]
+
+            if rs_current not in snp_history:
+                return 'rs' + rs_current
+            else:
+                snp_id = rs_low
+        else:
+            return 'deleted'
+
+    return 0
+
+def load_rs_merge(fname):
+
+    rs_merge = {}
+
+    if os.path.isdir(fname):
+        jobs = []
+        fnames = [os.path.join(fname, f) for f in os.listdir(fname)]
+
+        with ProcessPoolExecutor(len(fnames)) as p:
+            for fname in fnames:
+                jobs.append(p.submit(load_rs_merge_exec, fname, rs_merge))
+
+        for job in jobs:
+            rs_merge.update(job.result())
+
+    else:
+        rs_merge = load_rs_merge_exec(fname, rs_merge)
+
+    return rs_merge
+
+def load_rs_merge_exec(fname, rs_merge):
+
+    snptk.util.debug(f"Loading rs merge file '{fname}'...")
+
+    with gzip.open(fname, 'rt', encoding='utf-8') as f:
+        for line in f:
+            fields = line.strip().split('\t')
+            rs_high, rs_low, rs_current = fields[0], fields[1], fields[6]
+            rs_merge[rs_high] = (rs_low, rs_current)
+
+    return rs_merge
 
 def load_snp_history(fname):
+
     snp_history = set()
+
+    if os.path.isdir(fname):
+        jobs = []
+        fnames = [os.path.join(fname, f) for f in os.listdir(fname)]
+
+        with ProcessPoolExecutor(len(fnames)) as p:
+            for fname in fnames:
+                jobs.append(p.submit(load_snp_history_exec, fname, snp_history))
+
+        for job in jobs:
+            snp_history.update(job.result())
+
+    else:
+        snp_history = load_snp_history_exec(fname, snp_history)
+
+    return snp_history
+
+def load_snp_history_exec(fname, snp_history):
+
+    snptk.util.debug(f"Loading SNP history file '{fname}'...")
 
     with gzip.open(fname, 'rt', encoding='utf-8') as f:
         for line in f:
