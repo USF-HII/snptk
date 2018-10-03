@@ -8,7 +8,7 @@ from concurrent.futures import ProcessPoolExecutor
 
 import snptk.util
 
-def execute_load(load_func, fname, filter_set, merge_method='update'):
+def execute_load(load_func, fname, *args, merge_method='update'):
     """
     Accepts a load_* function pointer, fname, and arguments and executes using a ProcessPoolExecutor()
     if the fname is a directory, otherwise call the function_pointer directly.
@@ -16,7 +16,11 @@ def execute_load(load_func, fname, filter_set, merge_method='update'):
     The result will be either a dictionary with strings as keys or a list.
     The code performs a simple merge of strings but uses extend to merge lists.
     """
-    result = {}
+
+    if merge_method == 'set':
+        result = set()
+    else:
+        result = {}
 
     if os.path.isdir(fname):
         jobs = []
@@ -24,21 +28,26 @@ def execute_load(load_func, fname, filter_set, merge_method='update'):
 
         with ProcessPoolExecutor(len(fnames)) as p:
             for fname in fnames:
-                jobs.append(p.submit(load_func, fname, filter_set))
+                if args:
+                    jobs.append(p.submit(load_func, fname, *args))
+                else:
+                    jobs.append(p.submit(load_func, fname))
 
             for job in jobs:
-                if merge_method == 'update':
+                if merge_method == 'update' or merge_method == 'set':
                     result.update(job.result())
 
                 elif merge_method == 'extend':
                     for k, v in job.result().items():
                         result.setdefault(k, []).extend(v)
-
                 else:
                     raise ValueError(f'Unknown merge method "{merge_method}"')
 
     else:
-        result = load_func(fname, filter_set)
+        if args:
+            result = load_func(fname, *args)
+        else:
+            result = load_func(fname)
 
     return result
 
@@ -76,24 +85,6 @@ def load_rs_merge(fname):
 
     rs_merge = {}
 
-    if os.path.isdir(fname):
-        jobs = []
-        fnames = [os.path.join(fname, f) for f in os.listdir(fname)]
-
-        with ProcessPoolExecutor(len(fnames)) as p:
-            for fname in fnames:
-                jobs.append(p.submit(load_rs_merge_exec, fname, rs_merge))
-
-        for job in jobs:
-            rs_merge.update(job.result())
-
-    else:
-        rs_merge = load_rs_merge_exec(fname, rs_merge)
-
-    return rs_merge
-
-def load_rs_merge_exec(fname, rs_merge):
-
     snptk.util.debug(f"Loading rs merge file '{fname}'...")
 
     with gzip.open(fname, 'rt', encoding='utf-8') as f:
@@ -102,29 +93,13 @@ def load_rs_merge_exec(fname, rs_merge):
             rs_high, rs_low, rs_current = fields[0], fields[1], fields[6]
             rs_merge[rs_high] = (rs_low, rs_current)
 
+    snptk.util.debug(f"Complete loading rs merge file '{fname}'...")
+
     return rs_merge
 
 def load_snp_history(fname):
 
     snp_history = set()
-
-    if os.path.isdir(fname):
-        jobs = []
-        fnames = [os.path.join(fname, f) for f in os.listdir(fname)]
-
-        with ProcessPoolExecutor(len(fnames)) as p:
-            for fname in fnames:
-                jobs.append(p.submit(load_snp_history_exec, fname, snp_history))
-
-        for job in jobs:
-            snp_history.update(job.result())
-
-    else:
-        snp_history = load_snp_history_exec(fname, snp_history)
-
-    return snp_history
-
-def load_snp_history_exec(fname, snp_history):
 
     snptk.util.debug(f"Loading SNP history file '{fname}'...")
 
@@ -133,6 +108,8 @@ def load_snp_history_exec(fname, snp_history):
             if line.lower().find('re-activ') < 0:
                 fields = line.strip().split('\t')
                 snp_history.add(fields[0])
+
+    snptk.util.debug(f"Completed loading SNP history file '{fname}'...")
 
     return snp_history
 

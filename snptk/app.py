@@ -15,8 +15,8 @@ def update_snpid_and_position(args):
     snp_ids = set()
 
     bim_entries = snptk.core.load_bim(bim_fname)
-    snp_history = snptk.core.load_snp_history(snp_history_fname)
-    rs_merge = snptk.core.load_rs_merge(rs_merge_fname)
+    snp_history = snptk.core.execute_load(snptk.core.load_snp_history, snp_history_fname, merge_method='set')
+    rs_merge = snptk.core.execute_load(snptk.core.load_rs_merge, rs_merge_fname, merge_method='update')
 
     for entry in bim_entries:
         snp_ids.add(entry['snp_id'])
