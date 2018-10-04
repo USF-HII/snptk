@@ -62,11 +62,14 @@ def update_snp_id(snp_id, snp_history, rs_merge):
     if snp_id.startswith('rs'):
         snp_id = snp_id[2:]
 
+    if not snp_id.isdigit():
+        return snp_id
+
     if snp_id not in rs_merge:
         if snp_id not in snp_history:
-            return 'unchanged'
+            return 'rs' + snp_id
         else:
-            return 'deleted'
+            return None
 
     while True:
         if snp_id in rs_merge:
@@ -77,9 +80,9 @@ def update_snp_id(snp_id, snp_history, rs_merge):
             else:
                 snp_id = rs_low
         else:
-            return 'deleted'
+            return None
 
-    return 0
+    return None
 
 def load_rs_merge(fname):
 
