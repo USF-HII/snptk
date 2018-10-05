@@ -1,6 +1,8 @@
 import os
 import sys
 
+from os.path import join
+
 from concurrent.futures import ProcessPoolExecutor
 
 import snptk.core
@@ -11,6 +13,7 @@ def update_snpid_and_position(args):
     dbsnp_fname = args['dbsnp']
     snp_history_fname = args['snp_history']
     rs_merge_fname = args['rs_merge']
+    output_prefix = args['output_prefix']
 
     snp_history = snptk.core.execute_load(snptk.core.load_snp_history, snp_history_fname, merge_method='set')
     rs_merge = snptk.core.execute_load(snptk.core.load_rs_merge, rs_merge_fname, merge_method='update')
@@ -23,7 +26,7 @@ def update_snpid_and_position(args):
     for entry in snptk.core.load_bim(bim_fname):
         snp_id = entry['snp_id']
         snp_id_new = snptk.core.update_snp_id(snp_id, snp_history, rs_merge)
-        snp_map.add((snp_id, snp_id_new))
+        snp_map.append((snp_id, snp_id_new))
 
     #-----------------------------------------------------------------------------------
     # Load dbsnp by snp_id
@@ -50,19 +53,29 @@ def update_snpid_and_position(args):
             if snp_id_new != snp_id:
 
                 # If the merged snp was already in the original
-                if snp_id_new in [snp[0] for snp_map]:
-                    snps_to_delete.add(snp_id)
+                if snp_id_new in [snp[0] for snp in snp_map]:
+                    snps_to_delete.append(snp_id)
+
+                elif snp_id_new in dbsnp:
+                    snps_to_update.append((snp_id, snp_id_new))
+                    coords_to_update.append((snp_id_new, dbsnp[snp_id_new]))
 
                 else:
-                    snps_to_update.add((snp_id, snp_id_new))
-                    coords_to_update.add((snp_id_new, dbsnp[snp_id_new]))
+                    snps_to_delete.append(snp_id_new)
+
             else:
                 if snp_id in dbsnp:
-                    coords_to_update.add((snp_id, dbsnp[snp_id]))
+                    coords_to_update.append((snp_id, dbsnp[snp_id]))
 
         # If snp has been deleted
         else:
-           snps_to_delete.add(snp_id)
+           snps_to_delete.append(snp_id)
+
+    #delete, update, coord_update
+    with open(join(output_prefix, 'deleted_snps.txt'), 'w') as f:
+        for snp_id in snps_to_delete:
+            print(snp_id, file=f)
+
 
 def snpid_from_coord(args):
     snptk.util.debug(f'snpid_from_coord: {args}', 1)

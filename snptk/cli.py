@@ -36,9 +36,11 @@ def main():
 
     parser_update_snpids.add_argument('-d', '--dbsnp')
 
-    parser_update_snpids.add_argument('-snph', '--snp_history')
+    parser_update_snpids.add_argument('-s', '--snp_history')
 
-    parser_update_snpids.add_argument('-rs', '--rs_merge')
+    parser_update_snpids.add_argument('-r', '--rs_merge')
+
+    parser_update_snpids.add_argument('-o', '--output-prefix')
 
     #-----------------------------------------------------------------------------------------------------
     # parse
