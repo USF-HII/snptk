@@ -43,15 +43,20 @@ def update_snpid_and_position(args):
     for snp_id, snp_id_new in snp_map:
         if snp_id_new:
             if snp_id_new != snp_id:
-                snps_to_update.add((snp_id, snp_id_new))
-                coords_to_update.add((snp_id_new, dbsnp[snp_id_new]))
+
+                if snp_id_new in [snp[0] for snp_map]:
+                    snps_to_delete.add(snp_id)
+                else:
+                    snps_to_update.add((snp_id, snp_id_new))
+                    coords_to_update.add((snp_id_new, dbsnp[snp_id_new]))
             else:
-                coords_to_update.add((snp_id, dbsnp[snp_id]))
+                if snp_id not in dbsnp:
+                    coords_to_update.add((snp_id, dbsnp[snp_id]))
+
         else:
            snps_to_delete.add(snp_id)
 
     # last thoughts
-    #   handle snp_id_new that already was present in snp_map[0]
     #   handle snp_id that are not in dbsnp (ignore)
 
 
