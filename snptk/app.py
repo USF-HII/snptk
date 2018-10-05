@@ -12,78 +12,48 @@ def update_snpid_and_position(args):
     snp_history_fname = args['snp_history']
     rs_merge_fname = args['rs_merge']
 
-
-    bim_entries = snptk.core.load_bim(bim_fname)
     snp_history = snptk.core.execute_load(snptk.core.load_snp_history, snp_history_fname, merge_method='set')
     rs_merge = snptk.core.execute_load(snptk.core.load_rs_merge, rs_merge_fname, merge_method='update')
 
-    update_look_up = {}
+    #-----------------------------------------------------------------------------------
+    # Build a list of tuples with the original snp_id and updated_snp_id
+    #-----------------------------------------------------------------------------------
+    snp_map = []
 
-    snp_ids = set()
-    snp_ids_deleted = set()
+    for entry in snptk.core.load_bim(bim_fname):
+        snp_id_new = snptk.core.update_snp_id(snp_id, snp_history, rs_merge)
+        snp_map.add((snp_id, snp_id_new))
 
-    for entry in bim_entries:
-        snp_id = snptk.core.update_snp_id(entry['snp_id'], snp_history, rs_merge)
+    #-----------------------------------------------------------------------------------
+    # Load dbsnp by snp_id
+    #-----------------------------------------------------------------------------------
+    dbsnp = snptk.core.execute_load(
+            snptk.core.load_dbsnp_by_snp_id,
+            dbsnp_fname,
+            set([snp for pair in snp_map for snp in pair]),
+            merge_method='update')
 
-        if snp_id == entry['snp_id']:
-            snp_ids.add(snp_id)
-            continue
+    #-----------------------------------------------------------------------------------
+    # Generate edit instructions
+    #-----------------------------------------------------------------------------------
+    coords_to_update = []
+    snps_to_delete = []
+    snps_to_update = []
 
-        elif snp_id == None:
-            snp_ids_deleted.add(snp_id)
-            snptk.util.debug(f'SNP id deleted {snp_id}')
-
-        elif updated_snp_id != snp_id:
-            update_look_up[snp_id] = updated_snp_id
-            updated_snp_ids.add(updated_snp_id)
-            snptk.util.debug(f'SNP id was {snp_id}, Now is {updated_snp_id}')
-
-    db = snptk.core.execute_load(snptk.core.load_dbsnp_by_snp_id, dbsnp_fname, updated_snp_ids, merge_method='update')
-
-    counter = 0
-    deleted_count = 0
-    update_id = 0
-    #update snp id and position
-    updated_bim_entries = []
-    for entry in bim_entries:
-        snp_id = entry['snp_id']
-        chromosome = entry['chromosome']
-        position = entry['position']
-
-        if snp_id in deleted_snp_ids:
-            #updated_bim_entries.remove(entry)
-            deleted_count +=1
-            continue
-
-        if snp_id in update_look_up:
-            snp_id = update_look_up[snp_id]
-            entry['snp_id'] = snp_id
-            update_id +=1
-
-        if snp_id in db:
-            k = chromosome + ':' + position
-            counter += 1
-            if db[snp_id] != k:
-                temp = k.split(':')
-                entry['chromosome'] = temp[0]
-                entry['position'] = temp [1]
+    for snp_id, snp_id_new in snp_map:
+        if snp_id_new:
+            if snp_id_new != snp_id:
+                snps_to_update.add((snp_id, snp_id_new))
+                coords_to_update.add((snp_id_new, dbsnp[snp_id_new]))
             else:
-                print('unchanged?!?!?')
+                coords_to_update.add((snp_id, dbsnp[snp_id]))
         else:
-            #AA_DQB1_-21_32742328_x
-            #SNP_DQB1_32742328_T
-            #SNP_DQB1_32742328_C
-            pass
+           snps_to_delete.add(snp_id)
 
-        updated_bim_entries.append(entry)
+    # last thoughts
+    #   handle snp_id_new that already was present in snp_map[0]
+    #   handle snp_id that are not in dbsnp (ignore)
 
-    print ('')
-    print ('Deleted snps: ' + str(deleted_count))
-    print ('Updated snps: ' + str(update_id))
-    print ('Number of snps found in hg19 db: ' + str(counter))
-    print ('Orignial Bim file size: ' + str(len(bim_entries)))
-    print ('Updated Bim file size: ' + str(len(updated_bim_entries)))
-    print ('')
 
 def snpid_from_coord(args):
     snptk.util.debug(f'snpid_from_coord: {args}', 1)
