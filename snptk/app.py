@@ -21,6 +21,7 @@ def update_snpid_and_position(args):
     snp_map = []
 
     for entry in snptk.core.load_bim(bim_fname):
+        snp_id = entry['snp_id']
         snp_id_new = snptk.core.update_snp_id(snp_id, snp_history, rs_merge)
         snp_map.add((snp_id, snp_id_new))
 
@@ -36,29 +37,32 @@ def update_snpid_and_position(args):
     #-----------------------------------------------------------------------------------
     # Generate edit instructions
     #-----------------------------------------------------------------------------------
-    coords_to_update = []
     snps_to_delete = []
     snps_to_update = []
+    coords_to_update = []
 
     for snp_id, snp_id_new in snp_map:
+
+        # If snp has not been deleted
         if snp_id_new:
+
+            # If the snp has been updated (merged)
             if snp_id_new != snp_id:
 
+                # If the merged snp was already in the original
                 if snp_id_new in [snp[0] for snp_map]:
                     snps_to_delete.add(snp_id)
+
                 else:
                     snps_to_update.add((snp_id, snp_id_new))
                     coords_to_update.add((snp_id_new, dbsnp[snp_id_new]))
             else:
-                if snp_id not in dbsnp:
+                if snp_id in dbsnp:
                     coords_to_update.add((snp_id, dbsnp[snp_id]))
 
+        # If snp has been deleted
         else:
            snps_to_delete.add(snp_id)
-
-    # last thoughts
-    #   handle snp_id that are not in dbsnp (ignore)
-
 
 def snpid_from_coord(args):
     snptk.util.debug(f'snpid_from_coord: {args}', 1)
