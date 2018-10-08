@@ -76,6 +76,19 @@ def update_snpid_and_position(args):
         for snp_id in snps_to_delete:
             print(snp_id, file=f)
 
+    with open(join(output_prefix, 'updated_snps.txt'), 'w') as f:
+        for snp_id,snp_id_new in snps_to_update:
+            print(snp_id + '\t' + snp_id_new, file=f)
+
+    with open(join(output_prefix, 'coord_update.txt'), 'w') as f:
+        for snp_id,coord_new in coords_to_update:
+            coord_new = coord_new.split(':')[1]
+            print(snp_id + '\t' + coord_new, file=f)
+
+    with open(join(output_prefix, 'chr_update.txt'), 'w') as f:
+        for snp_id,chromosome in coords_to_update:
+            chromosome = chromosome.split(':')[0]
+            print(snp_id + '\t' + chromosome, file=f)
 
 def snpid_from_coord(args):
     snptk.util.debug(f'snpid_from_coord: {args}', 1)

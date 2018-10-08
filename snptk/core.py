@@ -175,6 +175,8 @@ def load_dbsnp_by_snp_id(fname, snp_ids, offset=1):
                     position = str(int(fields[2]) + offset)
                     db[snp_id] = chromosome + ':' + position
 
+    snptk.util.debug(f"Completed loading dbSNP file '{fname}'...")
+
     return db
 
 def load_dbsnp_by_coordinate(fname, coordinates, offset=1):
