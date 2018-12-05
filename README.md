@@ -13,6 +13,46 @@ and outputs to `STDOUT`.
 
      snptk snpid-from-coord --dbsnp=tmp/data/grch38p7/dbsnp.d/ tests/data/example.bim
 
+### update-snpid-and-position
+
+     snptk update-snpid-and-position  ...
+
+This will generate 4  plink edit files as:
+- `<prefix>/deleted.txt`
+- `<prefix>/updated_snps.txt`
+- `<prefix>/coord_update.txt`
+- `<prefix>/chr_update.txt`
+
+These files are then used by plink against the original `bim`, e.g.:
+
+    plink \
+      [--keep-allele-order] \
+      --bfile <bim> \
+      --exclude <prefix>/deleted_snps.txt \
+      --make-bed \
+      --out <output_bim_1>
+
+    plink \
+      [--keep-allele-order] \
+      --bfile <output_bim_1> \
+      --exclude <prefix>/updated_snps.txt \
+      --make-bed \
+      --out <output_bim_2>
+
+    plink \
+      [--keep-allele-order] \
+      --bfile <output_bim_2> \
+      --exclude <prefix>/coord_update.txt \
+      --make-bed \
+      --out <output_bim_3>
+
+    plink \
+      [--keep-allele-order] \
+      --bfile <output_bim_3> \
+      --exclude <prefix>/chr_update.txt \
+      --make-bed \
+      --out <output_bim_4>
+
 ## Concurrency
 
 Since the reference files `snptk` deals with are rather large in number of records we have included a split utility to read the original file and split it into chunks within a directory.
@@ -27,3 +67,5 @@ For example:
       /shares/hii/bioinfo/ref/ncbi/human_9606_b151_GRCh38p7/b151_SNPChrPosOnRef_108.bcp.gz \
       tmp/data/grch38p7/dbsnp.d/ \
       32
+
+

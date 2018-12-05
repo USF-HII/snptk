@@ -8,6 +8,8 @@ from concurrent.futures import ProcessPoolExecutor
 
 import snptk.util
 
+from snptk.util import debug
+
 def execute_load(load_func, fname, *args, merge_method='update'):
     """
     Accepts a load_* function pointer, fname, and arguments and executes using a ProcessPoolExecutor()
@@ -88,7 +90,7 @@ def load_rs_merge(fname):
 
     rs_merge = {}
 
-    snptk.util.debug(f"Loading rs merge file '{fname}'...")
+    debug(f"Loading rs merge file '{fname}'...")
 
     with gzip.open(fname, 'rt', encoding='utf-8') as f:
         for line in f:
@@ -96,7 +98,7 @@ def load_rs_merge(fname):
             rs_high, rs_low, rs_current = fields[0], fields[1], fields[6]
             rs_merge[rs_high] = (rs_low, rs_current)
 
-    snptk.util.debug(f"Complete loading rs merge file '{fname}'...")
+    debug(f"Complete loading rs merge file '{fname}'...")
 
     return rs_merge
 
@@ -104,7 +106,7 @@ def load_snp_history(fname):
 
     snp_history = set()
 
-    snptk.util.debug(f"Loading SNP history file '{fname}'...")
+    debug(f"Loading SNP history file '{fname}'...")
 
     with gzip.open(fname, 'rt', encoding='utf-8') as f:
         for line in f:
@@ -112,7 +114,7 @@ def load_snp_history(fname):
                 fields = line.strip().split('\t')
                 snp_history.add(fields[0])
 
-    snptk.util.debug(f"Completed loading SNP history file '{fname}'...")
+    debug(f"Completed loading SNP history file '{fname}'...")
 
     return snp_history
 
@@ -154,7 +156,7 @@ def load_dbsnp_by_snp_id(fname, snp_ids, offset=1):
     plink_map = {str(n):str(n) for n in range(1, 23)}
     plink_map.update({'X': '23', 'Y': '24', 'PAR': '25', 'M': '26', 'MT': '26'})
 
-    snptk.util.debug(f"Loading dbSNP file '{fname}'...")
+    debug(f"Loading dbSNP file '{fname}'...")
 
     with gzip.open(fname, 'rt', encoding='utf-8') as f:
         for line in f:
@@ -175,7 +177,7 @@ def load_dbsnp_by_snp_id(fname, snp_ids, offset=1):
                     position = str(int(fields[2]) + offset)
                     db[snp_id] = chromosome + ':' + position
 
-    snptk.util.debug(f"Completed loading dbSNP file '{fname}'...")
+    debug(f"Completed loading dbSNP file '{fname}'...")
 
     return db
 
@@ -192,7 +194,7 @@ def load_dbsnp_by_coordinate(fname, coordinates, offset=1):
     plink_map = {str(n):str(n) for n in range(1, 23)}
     plink_map.update({'X': '23', 'Y': '24', 'PAR': '25', 'M': '26', 'MT': '26'})
 
-    snptk.util.debug(f"Loading dbSNP file '{fname}'...")
+    debug(f"Loading dbSNP file '{fname}'...")
 
     with gzip.open(fname, 'rt', encoding='utf-8') as f:
         for line in f:
@@ -216,6 +218,6 @@ def load_dbsnp_by_coordinate(fname, coordinates, offset=1):
                     if fields[1] == 'AltOnly':
                         db[k] = ['AltOnly']
                     else:
-                        snptk.util.debug('len(fields) < 4 and not AltOnly: ' + str(fields))
+                        debug('len(fields) < 4 and not AltOnly: ' + str(fields))
 
     return db
