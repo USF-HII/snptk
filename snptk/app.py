@@ -66,7 +66,7 @@ def update_snpid_and_position(args):
                          coords_to_update.append((snp_id_new, dbsnp[snp_id_new]))
 
                 else:
-                    snps_to_delete.append(snp_id_new)
+                    snps_to_delete.append(snp_id)
 
             else:
                 # If the snp has not been updaed (merge)
