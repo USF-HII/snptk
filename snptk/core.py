@@ -6,8 +6,6 @@ import os
 
 from concurrent.futures import ProcessPoolExecutor
 
-import snptk.util
-
 from snptk.util import debug
 
 def execute_load(load_func, fname, *args, merge_method='update'):
