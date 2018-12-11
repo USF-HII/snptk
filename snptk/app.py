@@ -113,7 +113,7 @@ def update_logic(snp_map, dbsnp):
 
                 elif snp_id_new in dbsnp:
                     snps_to_update.append((snp_id, snp_id_new))
-                    debug(f'original_coord={original_coord} updated_coord={dbsnp[snp_id_new]}')
+                    debug(f'original_coord={original_coord} updated_coord={dbsnp[snp_id_new]}', level=2)
 
                     new_chromosome, new_position = dbsnp[snp_id_new].split(':')
                     original_chromosome, original_position = original_coord.split(':')
@@ -130,7 +130,7 @@ def update_logic(snp_map, dbsnp):
             else:
                 # If the snp has not been updaed (merge)
                 if snp_id in dbsnp:
-                    debug(f'original_coord={original_coord} updated_coord={dbsnp[snp_id]}')
+                    debug(f'original_coord={original_coord} updated_coord={dbsnp[snp_id]}', level=2)
 
                     new_chromosome, new_position = dbsnp[snp_id].split(':')
                     original_chromosome, original_position = original_coord.split(':')
