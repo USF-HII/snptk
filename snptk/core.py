@@ -116,7 +116,7 @@ def load_snp_history(fname):
 
     return snp_history
 
-def load_bim(fname):
+def load_bim(fname, offset=0):
     """
     Read in file with Plink BIM format (https://www.cog-genomics.org/plink2/formats#bim) and return labeled entries as a list.
     """
@@ -135,7 +135,7 @@ def load_bim(fname):
                 'chromosome': fields[0],
                 'snp_id': fields[1],
                 'distance': fields[2],
-                'position': fields[3],
+                'position': str(int(fields[3]) + offset),
                 'allele_1': fields[4],
                 'allele_2': fields[5]})
 

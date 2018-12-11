@@ -11,11 +11,11 @@ Helps analyze,translate SNP entries from NCBI dbSNP and others.
 Updates the SNP Id column in a Plink [BIM](https://www.cog-genomics.org/plink2/formats#bim) formatted file
 and outputs to `STDOUT`.
 
-     snptk snpid-from-coord --dbsnp=tmp/data/grch38p7/dbsnp.d/ tests/data/example.bim
+     snptk snpid-from-coord [--bim-offset=<n>] --dbsnp=tmp/data/grch38p7/dbsnp.d/ tests/data/example.bim
 
 ### update-snpid-and-position
 
-     snptk update-snpid-and-position  ...
+     snptk update-snpid-and-position [--bim-offset=<n>]...
 
 This will generate 4  plink edit files as:
 - `<prefix>/deleted.txt`

@@ -10,6 +10,7 @@ def update_snpid_and_position(args):
     dbsnp_fname = args['dbsnp']
     snp_history_fname = args['snp_history']
     rs_merge_fname = args['rs_merge']
+    bim_offset = int(args['bim_offset'])
     output_prefix = args['output_prefix']
 
     snp_history = snptk.core.execute_load(snptk.core.load_snp_history, snp_history_fname, merge_method='set')
@@ -20,7 +21,7 @@ def update_snpid_and_position(args):
     #-----------------------------------------------------------------------------------
     snp_map = []
 
-    for entry in snptk.core.load_bim(bim_fname):
+    for entry in snptk.core.load_bim(bim_fname, offset=bim_offset):
         snp_id = entry['snp_id']
         snp_id_new = snptk.core.update_snp_id(snp_id, snp_history, rs_merge)
         snp_map.append((snp_id, entry['chromosome'] + ':' + entry['position'], snp_id_new))
@@ -62,11 +63,12 @@ def snpid_from_coord(args):
     debug(f'snpid_from_coord: {args}', 1)
 
     bim_fname = args['bim']
+    bim_offset = int(args['bim_offset'])
     dbsnp_fname = args['dbsnp']
 
     coordinates = set()
 
-    bim_entries = snptk.core.load_bim(bim_fname)
+    bim_entries = snptk.core.load_bim(bim_fname, offset=bim_offset)
 
     for entry in bim_entries:
         coordinates.add(entry['chromosome'] + ':' + entry['position'])
