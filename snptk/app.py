@@ -8,6 +8,7 @@ from snptk.util import debug
 def update_snpid_and_position(args):
     bim_fname = args['bim']
     dbsnp_fname = args['dbsnp']
+    ucsc_fname = args['ucsc']
     snp_history_fname = args['snp_history']
     rs_merge_fname = args['rs_merge']
     bim_offset = int(args['bim_offset'])
@@ -35,10 +36,41 @@ def update_snpid_and_position(args):
         set([snp for pair in snp_map for snp in pair]),
         merge_method='update')
 
+    #ucsc_dbsnp = snptk.core.execute_load(
+    #    snptk.core.build_ucsc_snpdb,
+    #    ucsc_fname,
+    #    set([snp for pair in snp_map for snp in pair]),
+    #    merge_method='update')
+
+    #counter = 0
+    #for key in set(dbsnp.keys()).union(ucsc_dbsnp.keys()):
+    #    if key not in dbsnp:
+    #        print ("NCBI DB doesn't contain", key)
+    #    elif key not in ucsc_dbsnp:
+    #        print ("UCSC DB doesn't contain", key)
+    #    elif dbsnp[key] == ucsc_dbsnp[key]:
+    #        value1 = dbsnp[key]
+    #        value2 = ucsc_dbsnp[key]
+    #        print (f'MATCH...... {key}, ncbi: {value1}, ucsc {value2}')
+    #    else:
+    #        value1 = dbsnp[key]
+    #        value2 = ucsc_dbsnp[key]
+    #        counter += 1
+    #        print (f'DO NOT MATCH......{key}, ncbi: {value1}, ucsc {value2}')
+
+    #    print('--------------------')
+    #    print()
+
+    #print(len(ucsc_dbsnp))
+    #print(len(dbsnp))
+    #print(f'#\'s of Non mathcing coordinates: {counter}')
+
     #-----------------------------------------------------------------------------------
     # Generate edit instructions
     #-----------------------------------------------------------------------------------
     #delete, update, coord_update
+
+    #debug(f'Size of NCBI dbsnp: {dbsnp}, Size of UCSC dbsnp: {ucsc_dbsnp}', 1)
 
     snps_to_delete, snps_to_update, coords_to_update, chromosomes_to_update = update_logic(snp_map, dbsnp)
 

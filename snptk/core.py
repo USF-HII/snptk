@@ -221,7 +221,7 @@ def load_dbsnp_by_coordinate(fname, coordinates, offset=1):
     return db
 
 
-def build_ucsc_snpdb(fname, snp_ids, cache_fname=""):
+def build_ucsc_snpdb(fname, snp_ids, offset=1):
     """
     File Example: /shares/hii/bioinfo/ref/ucsc/hg19/snp150.txt.gz
     Fields Header: <bin><chromosome><chromosome_start><chromosome_end><SNP_rs_number><score><strand><refNCBI><refUCSC><observed_alleles>
@@ -233,14 +233,20 @@ def build_ucsc_snpdb(fname, snp_ids, cache_fname=""):
     plink_map = {'chr' + str(n):str(n) for n in range(1, 23)}
     plink_map.update({'chrX': '23', 'chrY': '24', 'PAR': '25', 'M': '26', 'MT': '26'})
 
+    debug(f"Loading UCSC dbSNP file '{fname}'...")
+
     with gzip.open(fname, 'rt', encoding='utf-8') as f:
         for line in f:
             fields = line.strip().split('\t')
             snp_id, chromosome, position = fields[4], fields[1], fields[3]
 
             if snp_id in snp_ids:
+                if chromosome not in plink_map:
+                    continue
                 chromosome = plink_map[fields[1]]
                 position = str(int(fields[2]) + offset)
                 db[snp_id] = chromosome + ':' + position
 
-    return ucsc_snpdb
+    debug(f"Completed loading UCSC dbSNP file '{fname}'...")
+
+    return db
