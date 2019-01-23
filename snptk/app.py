@@ -125,6 +125,7 @@ def snpid_from_coord(args):
 
         else:
             debug('NO_MATCH: ' + '\t'.join(entry.values()))
+            snps_to_delete.append(k)
 
     with open(join(output_prefix, 'deleted_snps.txt'), 'w') as f:
         for snp_id in snps_to_delete:
