@@ -35,21 +35,21 @@ These files are then used by plink against the original `bim`, e.g.:
     plink \
       [--keep-allele-order] \
       --bfile <output_bim_1> \
-      --exclude <prefix>/updated_snps.txt \
+      --update-name <prefix>/updated_snps.txt \
       --make-bed \
       --out <output_bim_2>
 
     plink \
       [--keep-allele-order] \
       --bfile <output_bim_2> \
-      --exclude <prefix>/coord_update.txt \
+      --update-map <prefix>/coord_update.txt \
       --make-bed \
       --out <output_bim_3>
 
     plink \
       [--keep-allele-order] \
       --bfile <output_bim_3> \
-      --exclude <prefix>/chr_update.txt \
+      --update-chr <prefix>/chr_update.txt \
       --make-bed \
       --out <output_bim_4>
 
