@@ -116,7 +116,7 @@ def snpid_from_coord(args):
         if k in db:
             if len(db[k]) > 1:
                 debug(f'Has more than one snp_id db[{k}] = {str(db[k])}')
-                snps_to_delete.append(k)
+                snps_to_delete.append(db[k])
             else:
                 if db[k][0] != entry['snp_id']:
                     debug(f'Rewrote snp_id {entry["snp_id"]} to {db[k][0]} for position {k}')
@@ -125,7 +125,7 @@ def snpid_from_coord(args):
 
         else:
             debug('NO_MATCH: ' + '\t'.join(entry.values()))
-            snps_to_delete.append(k)
+            snps_to_delete.append(entry['snp_id'])
 
     with open(join(output_prefix, 'deleted_snps.txt'), 'w') as f:
         for snp_id in snps_to_delete:
