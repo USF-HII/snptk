@@ -116,7 +116,7 @@ def snpid_from_coord(args):
         if k in db:
             if len(db[k]) > 1:
                 debug(f'Has more than one snp_id db[{k}] = {str(db[k])}')
-                snps_to_delete.append(db[k])
+                snps_to_delete.append(entry['snp_id'])
             else:
                 if db[k][0] != entry['snp_id']:
                     debug(f'Rewrote snp_id {entry["snp_id"]} to {db[k][0]} for position {k}')
