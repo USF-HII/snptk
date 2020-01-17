@@ -80,13 +80,18 @@ def snpid_from_coord(args):
 
     snps_to_update = []
     snps_to_delete = []
+    multi_snps = []
     for entry in bim_entries:
         k = entry['chromosome'] + ':' + entry['position']
 
         if k in db:
             if len(db[k]) > 1:
                 debug(f'Has more than one snp_id db[{k}] = {str(db[k])}')
-                snps_to_delete.append(entry['snp_id'])
+                if args['keep_multi_snp_mappings']:
+                    multi_snps.append((k, db[k]))
+                    snps_to_update.append((entry['snp_id'], db[k][0]))
+                else:
+                    snps_to_delete.append(entry['snp_id'])
             else:
                 if db[k][0] != entry['snp_id']:
                     debug(f'Rewrote snp_id {entry["snp_id"]} to {db[k][0]} for position {k}')
@@ -105,6 +110,10 @@ def snpid_from_coord(args):
         for snp_id, snp_id_new in snps_to_update:
             print(snp_id + '\t' + snp_id_new, file=f)
 
+    if len(multi_snps) > 0:
+        with open(join(output_prefix, 'multi_snp_mappings.txt'), 'w') as f:
+            for chr_pos, mappings in multi_snps:
+                print(chr_pos + '\t'+ ', '.join(mappings), file=f)
 
 def update_logic(snp_map, dbsnp):
 
