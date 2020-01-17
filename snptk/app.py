@@ -36,39 +36,9 @@ def update_snpid_and_position(args):
         set([snp for pair in snp_map for snp in pair]),
         merge_method='update')
 
-    #ucsc_dbsnp = snptk.core.execute_load(
-    #    snptk.core.build_ucsc_snpdb,
-    #    ucsc_fname,
-    #    set([snp for pair in snp_map for snp in pair]),
-    #    merge_method='update')
-
-    #counter = 0
-    #for key in set(dbsnp.keys()).union(ucsc_dbsnp.keys()):
-    #    if key not in dbsnp:
-    #        print ("NCBI DB doesn't contain", key)
-    #    elif key not in ucsc_dbsnp:
-    #        print ("UCSC DB doesn't contain", key)
-    #    elif dbsnp[key] == ucsc_dbsnp[key]:
-    #        value1 = dbsnp[key]
-    #        value2 = ucsc_dbsnp[key]
-    #        print (f'MATCH...... {key}, ncbi: {value1}, ucsc {value2}')
-    #    else:
-    #        value1 = dbsnp[key]
-    #        value2 = ucsc_dbsnp[key]
-    #        counter += 1
-    #        print (f'DO NOT MATCH......{key}, ncbi: {value1}, ucsc {value2}')
-
-    #    print('--------------------')
-    #    print()
-
-    #print(len(ucsc_dbsnp))
-    #print(len(dbsnp))
-    #print(f'#\'s of Non mathcing coordinates: {counter}')
-
     #-----------------------------------------------------------------------------------
     # Generate edit instructions
     #-----------------------------------------------------------------------------------
-    #delete, update, coord_update
 
     #debug(f'Size of NCBI dbsnp: {dbsnp}, Size of UCSC dbsnp: {ucsc_dbsnp}', 1)
 
