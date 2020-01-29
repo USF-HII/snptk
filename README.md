@@ -12,6 +12,8 @@ Updates the SNP Id column in a Plink [BIM](https://www.cog-genomics.org/plink2/f
 and outputs to `STDOUT`.
 
      snptk snpid-from-coord [--bim-offset=<n>] --dbsnp=tmp/data/grch38p7/dbsnp.d/ tests/data/example.bim
+     
+Use `--keep-multi-snp-mappings` option to keep multi snp mappings and not delete them.
 
 ### update-snpid-and-position
 
