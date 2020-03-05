@@ -17,5 +17,24 @@ class TestSnpTkCore(unittest.TestCase):
 
         self.assertEqual(result, expected)
 
+    def test_update_snp_id_snphistory_and_rsmerge(self):
+        snpid =  'rs397507451'
+        snp_history = {'397507451'}
+        rsmerge = {'397507451': ('386829069', '386829069')}
 
+        self.assertEqual(snptk.core.update_snp_id(snpid, snp_history, rsmerge), 'rs386829069')
+
+    def test_update_snp_id_no_snphistory_or_rsmerge(self):
+        snpid =  'rs123'
+        snp_history = {}
+        rsmerge = {}
+
+        self.assertEqual(snptk.core.update_snp_id(snpid, snp_history, rsmerge), "rs123")
+
+    def test_update_snp_id_snp_history_only(self):
+        snpid =  'rs123'
+        snp_history = set(['123'])
+        rsmerge = {}
+
+        self.assertEqual(snptk.core.update_snp_id(snpid, snp_history, rsmerge), None)
 
