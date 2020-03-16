@@ -31,6 +31,8 @@ number_splits=${3:-$(nproc)}
 
 if [[ ${input_file} = *.gz ]] ; then
   cat="zcat"
+elif [[ ${input_file} = *.bz2 ]] ; then
+  cat="bzcat"
 else
   cat="cat"
 fi
