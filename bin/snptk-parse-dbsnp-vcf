@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+
+#### snptk-parse-dbsnp-vcf uses bcftools to extract information from vcf file
+
+set -euo pipefail
+
+usage() {
+  echo "Usage: $(basename $0) [-h|-v] <input_vcf> <output_file>" 1>&2
+  exit 1
+}
+
+myopts=$(getopt --options v,h --longoptions verbose,help -- "$@" ) || usage
+
+eval set -- "${myopts}"
+
+while true; do
+  case $1 in
+    -h|--help) usage;;
+    -v|--verbose) OPT_VERBOSE="true"; shift;;
+    --) shift; break;;
+    *) break;;
+  esac
+  shift
+done
+
+if [[ $# -lt 2 ]]; then
+  usage
+fi
+
+input_vcf=${1}
+output_file=${2}
+
+bcftools query -f '%ID %CHROM %POS\n' ${input_vcf} > ${output_file}
+
+gzip ${output_file}
+
+echo "Complete" 1>&2
+
