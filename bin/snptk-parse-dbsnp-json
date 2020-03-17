@@ -1,0 +1,102 @@
+#!/usr/bin/env python3
+
+import bz2
+import json
+import sys
+import argparse
+import re
+import os
+import gzip
+from os.path import join, basename, dirname, abspath, splitext
+from concurrent.futures import ProcessPoolExecutor
+
+sys.path.append('../snptk')
+
+import snptk.util
+from snptk.util import debug
+
+chromosomes = {
+        'X': '23',
+        'Y': '24',
+        'MT': '26'
+        }
+
+def process(fname):
+
+    base = basename(fname)
+    file_number = splitext(base)[0]
+    db = {}
+
+    #with gzip.open(outfile + '.gz', 'at') as out:
+    chromosome = re.search('chr(.*).json', fname).group(1)
+    if chromosome in chromosomes:
+        chromosome = chromosomes[chromosome]
+
+    debug(f'Began parsing chr{chromosome}-{file_number} dbsnp file')
+    with gzip.open(fname, "rb") as f2:
+        for line in f2:
+            d = json.loads(line.decode('utf-8'))
+            snpid = d['refsnp_id']
+
+            if d['present_obs_movements']:
+                position = str(d['present_obs_movements'][0]['allele_in_cur_release']['position'])
+            else:
+                debug(f'rs{snpid} on chr{chromosome} file {file_number} does not have a position available')
+                continue
+
+            print(snpid + " " + chromosome + " " + position)
+            #db[snpid] = chromosome + " " + position
+
+        debug(f'Finished parsing chr{chromosome}-{file_number} dbsnp file')
+
+    #return db
+
+def parse(input_dir, fnames, outfile):
+
+    result = {}
+    jobs = []
+
+    print(input_dir)
+    sys.exit()
+    process(input_dir)
+
+    # truncates file or creates it if it doesn't exist
+    #open(outfile+'.gz', 'w').close()
+
+    #for fname in fnames:
+    #    print(join(input_dir, fname))
+    #with ProcessPoolExecutor(len(fnames)) as p:
+    #    for fname in fnames:
+    #        fname = join(input_dir, fname)
+    #        jobs.append(p.submit(process, fname))
+    #    for job in jobs:
+    #        result.update(job.result())
+    #    #    result.update(job.result())
+
+    #for snpid, chr_position in result.items():
+    #    print(snpid + " " + chr_position, file=sys.stdout)
+    #with gzip.open(outfile + '.gz', 'at') as out:
+    #    for snpid, chr_position in result.items():
+    #        print(snpid + " " + chr_position, file=out)
+
+def main(argv):
+
+    parser = argparse.ArgumentParser(description='Parses GRCh38 json bz2 files and converts to flat gzipped file')
+
+    parser.add_argument('--version', action='version', version='%(prog)s 0.1')
+    parser.add_argument('--input_dir')
+    parser.add_argument('--output_file')
+
+    if len(argv) < 3:
+        parser.print_help(sys.stderr)
+        sys.exit()
+
+    args = parser.parse_args(argv)
+
+    #files = [i for i in os.listdir(args.input_dir)]
+    parse(args.input_dir, files, args.output_file)
+
+if __name__ == '__main__':
+    main(sys.argv[1:])
+
+
