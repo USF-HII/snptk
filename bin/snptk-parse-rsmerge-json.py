@@ -8,6 +8,7 @@ import os
 import gzip
 from os.path import join, basename, dirname, abspath, splitext
 from concurrent.futures import ProcessPoolExecutor
+import concurrent.futures
 from pprint import pprint
 
 sys.path.append('../snptk')
@@ -50,12 +51,11 @@ def parse(input_dir, fnames, outfile):
         for fname in fnames:
             fname = join(input_dir, fname)
             jobs.append(p.submit(process, fname, outfile))
-        for job in jobs:
-            result.update(job.result())
-
-    with gzip.open(outfile + '.gz', 'at') as out:
-        for snpid, merged_snpid in result.items():
-            print(snpid + " " + merged_snpid, file=out)
+        for job in concurrent.futures.as_completed(jobs):
+            data = job.result()
+            with gzip.open(outfile + '.gz', 'at') as out:
+                for snpid, merged_snpid in data.items():
+                    print(snpid + " " + merged_snpid, file=out)
 
 def main(argv):
     parser = argparse.ArgumentParser(description='Parses Rsmerge json bz2 file and converts to flat file')
