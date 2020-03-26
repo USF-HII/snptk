@@ -100,6 +100,35 @@ Uses snptk snpid_and_position output to update plink files
 
       {output_dir}/{out_name}.{bim,fam,bed}
 
+## Preprocessing of NCBI SNP data
+
+NCBI changed their dbsnp data format beginning with build 152. The new data format is in json formatting. Due to this, preprocessing is required to make dbsnp json files compatiable with snptk. NCBI dbsnp json files can be found here:
+https://ftp.ncbi.nih.gov/snp/archive/
+
+### Processing GRCh38 dbsnp JSON data
+
+We have provided a script inside of bin called snptk-parse-json.py. GRCh38 json data can be found at https://ftp.ncbi.nih.gov/snp/archive/b153/JSON/
+
+Usage of snptk-parse-json to process snp data: 
+
+       python3 snptk-parse-json.py --method dbsnp --outfile refsnp-chr1 refsnp-chr1.json.bz2
+
+Usage of snptk-parse-json to process rsmerge data:
+
+       python3 snptk-parse-json.py --method rsmerge --outfile Rsmerge refsnp-merged.json.bz2
+
+**Note:** Once all chromosomes have been processed, files need to be concatenated into one gzip file. 
+
+### Processing GRCh37 dbsnp VCF data
+
+GRCh37 is a little different than GRCh38 as NCBI does not provide json formatted files. Instead a GRCh37 VCF file is provided and located at https://ftp.ncbi.nih.gov/snp/archive/b153/VCF/GCF_000001405.25.gz. To process this file, we have provided a script inside of bin called snptk-parse-dbsnp-vcf which requires bcftools http://samtools.github.io/bcftools/
+to use. 
+
+Usage of snptk-parse-dbsnp-vcf:
+
+       snptk-parse-dbsnp-vcf <input_vcf> <output_file> 
+       
+
 ## Concurrency
 
 Since the reference files `snptk` deals with are rather large in number of records we have included a split utility to read the original file and split it into chunks within a directory.
