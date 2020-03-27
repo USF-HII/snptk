@@ -117,7 +117,9 @@ Usage of snptk-parse-json to process rsmerge data:
 
        python3 snptk-parse-json.py --method rsmerge --outfile Rsmerge refsnp-merged.json.bz2
 
-**Note:** Once all chromosomes have been processed, files need to be concatenated into one gzip file. 
+**Note:** Once all chromosomes have been processed, files need to be concatenated into one gzip file. This can be easily done with cat. 
+
+       cat chr1.gz {chr2, chr3,... chrMT}.gz > dbsnp-GRCh38.gz
 
 ### Processing GRCh37 dbsnp VCF data
 
