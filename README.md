@@ -129,7 +129,12 @@ to use.
 Usage of snptk-parse-dbsnp-vcf:
 
        snptk-parse-dbsnp-vcf <input_vcf> <output_file> 
-       
+
+Althought snptk-parse-dbsnp-vcf uses bcftools to extract snp information, the output does not contain correct chromosome assignmnets. In order to fix this issue, we need to map snp IDs to GRCh38 to assign correct chromosome value. To do this, we have a provided a script inside of bin called snptk-map-grch37-chromosomes.py to use. 
+
+Usage of snptk-map-grch37-chromosomes.py:
+
+       python3 snptk-map-grch37-chromosomes.py --grch37_dbsnp grch37.gz --grch38_dbsnp grch38.gz <outfile>
 
 ## Concurrency
 
