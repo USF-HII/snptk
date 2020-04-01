@@ -52,11 +52,11 @@ def execute_load(load_func, fname, *args, merge_method='update'):
     return result
 
 
-def update_snp_id(snp_id, snp_history, rs_merge):
+def update_snp_id(snp_id, rs_merge):
     """
-    Pass SNP Id and using RsMerge and SNPHistory return the merged SNP Id, the same if unchanged
-    or None if the SNP has been removed by NCBI.
-    RSMerge logic from UM example script: https://genome.sph.umich.edu/wiki/LiftRsNumber.py
+    Pass SNP Id and using RsMerge return the merged SNP Id or the same if unchanged  if the SNP has been removed by NCBI.
+
+    Old RSMerge logic from UM example script: https://genome.sph.umich.edu/wiki/LiftRsNumber.py
     """
 
     if snp_id.startswith('rs'):
@@ -65,24 +65,14 @@ def update_snp_id(snp_id, snp_history, rs_merge):
     if not snp_id.isdigit():
         return snp_id
 
+    # snp has no merge history
     if snp_id not in rs_merge:
-        if snp_id not in snp_history:
-            return 'rs' + snp_id
-        else:
-            return None
+        return 'rs' + snp_id
 
-    while True:
-        if snp_id in rs_merge:
-            rs_low, rs_current = rs_merge[snp_id]
+    while snp_id in rs_merge:
+        snp_id = rs_merge[snp_id]
 
-            if rs_current not in snp_history:
-                return 'rs' + rs_current
-            else:
-                snp_id = rs_low
-        else:
-            return None
-
-    return None
+    return 'rs' + snp_id
 
 def load_rs_merge(fname):
 
@@ -92,29 +82,13 @@ def load_rs_merge(fname):
 
     with gzip.open(fname, 'rt', encoding='utf-8') as f:
         for line in f:
-            fields = line.strip().split('\t')
-            rs_high, rs_low, rs_current = fields[0], fields[1], fields[6]
-            rs_merge[rs_high] = (rs_low, rs_current)
+            fields = line.strip().split()
+            rsid, merged_rsid = fields[0], fields[1]
+            rs_merge[rsid] = merged_rsid
 
     debug(f"Complete loading rs merge file '{fname}'...")
 
     return rs_merge
-
-def load_snp_history(fname):
-
-    snp_history = set()
-
-    debug(f"Loading SNP history file '{fname}'...")
-
-    with gzip.open(fname, 'rt', encoding='utf-8') as f:
-        for line in f:
-            if line.lower().find('re-activ') < 0:
-                fields = line.strip().split('\t')
-                snp_history.add(fields[0])
-
-    debug(f"Completed loading SNP history file '{fname}'...")
-
-    return snp_history
 
 def load_bim(fname, offset=0):
     """
@@ -141,7 +115,7 @@ def load_bim(fname, offset=0):
 
     return entries
 
-def load_dbsnp_by_snp_id(fname, snp_ids, offset=1):
+def load_dbsnp_by_snp_id(fname, snp_ids, offset=0):
     """
     Read in NCBI dbSNP and return subset of entries keyed by SNP Id. E.g.:
 
@@ -158,28 +132,27 @@ def load_dbsnp_by_snp_id(fname, snp_ids, offset=1):
 
     with gzip.open(fname, 'rt', encoding='utf-8') as f:
         for line in f:
-            fields = line.strip().split('\t')
+            fields = line.strip().split()
 
             fields_len = len(fields)
 
+            # do we need this? YES
             if fields_len < 3 or fields[2] == '':
                 continue
 
             snp_id = 'rs' + fields[0]
 
+            # add back in Alt Only if statement
             if snp_id in snp_ids:
-                if fields[1] == 'AltOnly':
-                    db[snp_id] = ['AltOnly']
-                else:
-                    chromosome = plink_map[fields[1]]
-                    position = str(int(fields[2]) + offset)
-                    db[snp_id] = chromosome + ':' + position
+                chromosome = plink_map[fields[1]]
+                position = str(int(fields[2]) + offset)
+                db[snp_id] = chromosome + ':' + position
 
     debug(f"Completed loading dbSNP file '{fname}'...")
 
     return db
 
-def load_dbsnp_by_coordinate(fname, coordinates, offset=1):
+def load_dbsnp_by_coordinate(fname, coordinates, offset=0):
     """
     Read in NCBI dbSNP and return subset of entries keyed by coordinate. E.g.:
 
@@ -196,7 +169,7 @@ def load_dbsnp_by_coordinate(fname, coordinates, offset=1):
 
     with gzip.open(fname, 'rt', encoding='utf-8') as f:
         for line in f:
-            fields = line.strip().split('\t')
+            fields = line.strip().split()
 
             fields_len = len(fields)
 
@@ -220,33 +193,3 @@ def load_dbsnp_by_coordinate(fname, coordinates, offset=1):
 
     return db
 
-
-def build_ucsc_snpdb(fname, snp_ids, offset=1):
-    """
-    File Example: /shares/hii/bioinfo/ref/ucsc/hg19/snp150.txt.gz
-    Fields Header: <bin><chromosome><chromosome_start><chromosome_end><SNP_rs_number><score><strand><refNCBI><refUCSC><observed_alleles>
-    Position:       0     1          2                 3                4             5      6       7        8        9
-    Example: 585 chr1 259 260 rs72477211 0 + C C A/G genomic single unknown 0 0 unknown exact   3
-    """
-    db = {}
-
-    plink_map = {'chr' + str(n):str(n) for n in range(1, 23)}
-    plink_map.update({'chrX': '23', 'chrY': '24', 'PAR': '25', 'M': '26', 'MT': '26'})
-
-    debug(f"Loading UCSC dbSNP file '{fname}'...")
-
-    with gzip.open(fname, 'rt', encoding='utf-8') as f:
-        for line in f:
-            fields = line.strip().split('\t')
-            snp_id, chromosome, position = fields[4], fields[1], fields[3]
-
-            if snp_id in snp_ids:
-                if chromosome not in plink_map:
-                    continue
-                chromosome = plink_map[fields[1]]
-                position = str(int(fields[2]) + offset)
-                db[snp_id] = chromosome + ':' + position
-
-    debug(f"Completed loading UCSC dbSNP file '{fname}'...")
-
-    return db

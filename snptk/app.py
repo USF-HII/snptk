@@ -9,13 +9,10 @@ from snptk.util import debug
 def update_snpid_and_position(args):
     bim_fname = args['bim']
     dbsnp_fname = args['dbsnp']
-    ucsc_fname = args['ucsc']
-    snp_history_fname = args['snp_history']
     rs_merge_fname = args['rs_merge']
     bim_offset = int(args['bim_offset'])
     output_prefix = args['output_prefix']
 
-    snp_history = snptk.core.execute_load(snptk.core.load_snp_history, snp_history_fname, merge_method='set')
     rs_merge = snptk.core.execute_load(snptk.core.load_rs_merge, rs_merge_fname, merge_method='update')
 
     #-----------------------------------------------------------------------------------
@@ -25,12 +22,13 @@ def update_snpid_and_position(args):
 
     for entry in snptk.core.load_bim(bim_fname, offset=bim_offset):
         snp_id = entry['snp_id']
-        snp_id_new = snptk.core.update_snp_id(snp_id, snp_history, rs_merge)
+        snp_id_new = snptk.core.update_snp_id(snp_id, rs_merge)
         snp_map.append((snp_id, entry['chromosome'] + ':' + entry['position'], snp_id_new))
 
     #-----------------------------------------------------------------------------------
     # Load dbsnp by snp_id
     #-----------------------------------------------------------------------------------
+
     dbsnp = snptk.core.execute_load(
         snptk.core.load_dbsnp_by_snp_id,
         dbsnp_fname,
@@ -40,8 +38,6 @@ def update_snpid_and_position(args):
     #-----------------------------------------------------------------------------------
     # Generate edit instructions
     #-----------------------------------------------------------------------------------
-
-    #debug(f'Size of NCBI dbsnp: {dbsnp}, Size of UCSC dbsnp: {ucsc_dbsnp}', 1)
 
     snps_to_delete, snps_to_update, coords_to_update, chromosomes_to_update = update_logic(snp_map, dbsnp)
 
@@ -63,7 +59,6 @@ def update_snpid_and_position(args):
 
 
 def snpid_from_coord(args):
-    debug(f'snpid_from_coord: {args}', 1)
 
     bim_fname = args['bim']
     bim_offset = int(args['bim_offset'])
@@ -90,7 +85,12 @@ def snpid_from_coord(args):
                 debug(f'Has more than one snp_id db[{k}] = {str(db[k])}')
                 if args['keep_multi_snp_mappings']:
                     multi_snps.append((k, db[k]))
-                    snps_to_update.append((entry['snp_id'], db[k][0]))
+
+                    # this prevents rs123 being updated to rs123. No change
+                    if db[k][0] != entry['snp_id']:
+                        snps_to_update.append((entry['snp_id'], db[k][0]))
+                    else:
+                        continue
                 else:
                     snps_to_delete.append(entry['snp_id'])
             else:
@@ -125,49 +125,46 @@ def update_logic(snp_map, dbsnp):
 
     for snp_id, original_coord, snp_id_new in snp_map:
 
-        # If snp has not been deleted
-        if snp_id_new:
+        # If the snp has been updated (merged)
+        if snp_id_new != snp_id:
 
-            # If the snp has been updated (merged)
-            if snp_id_new != snp_id:
+            # If the merged snp was already in the original
+            if snp_id_new in [snp[0] for snp in snp_map]:
+                snps_to_delete.append(snp_id)
 
-                # If the merged snp was already in the original
-                if snp_id_new in [snp[0] for snp in snp_map]:
-                    snps_to_delete.append(snp_id)
+            elif snp_id_new in dbsnp:
+                snps_to_update.append((snp_id, snp_id_new))
+                debug(f'original_coord={original_coord} updated_coord={dbsnp[snp_id_new]}', level=2)
 
-                elif snp_id_new in dbsnp:
-                    snps_to_update.append((snp_id, snp_id_new))
-                    debug(f'original_coord={original_coord} updated_coord={dbsnp[snp_id_new]}', level=2)
+                new_chromosome, new_position = dbsnp[snp_id_new].split(':')
+                original_chromosome, original_position = original_coord.split(':')
 
-                    new_chromosome, new_position = dbsnp[snp_id_new].split(':')
-                    original_chromosome, original_position = original_coord.split(':')
+                if new_position != original_position:
+                    coords_to_update.append((snp_id_new, new_position))
 
-                    if new_position != original_position:
-                        coords_to_update.append((snp_id_new, new_position))
-
-                    if new_chromosome != original_chromosome:
-                        chromosomes_to_update.append((snp_id_new, new_chromosome))
-
-                else:
-                    snps_to_delete.append(snp_id)
+                if new_chromosome != original_chromosome:
+                    chromosomes_to_update.append((snp_id_new, new_chromosome))
 
             else:
-                # If the snp has not been updaed (merge)
-                if snp_id in dbsnp:
-                    debug(f'original_coord={original_coord} updated_coord={dbsnp[snp_id]}', level=2)
+                snps_to_delete.append(snp_id)
 
-                    new_chromosome, new_position = dbsnp[snp_id].split(':')
-                    original_chromosome, original_position = original_coord.split(':')
-
-                    if new_position != original_position:
-                        coords_to_update.append((snp_id, new_position))
-
-                    if new_chromosome != original_chromosome:
-                        chromosomes_to_update.append((snp_id, new_chromosome))
-
-        # If snp has been deleted
+        # if snp_id wasn't merged and is the same as snp_id_new (no change)
         else:
-            snps_to_delete.append(snp_id)
+            if snp_id in dbsnp:
+                debug(f'original_coord={original_coord} updated_coord={dbsnp[snp_id]}', level=2)
+
+                new_chromosome, new_position = dbsnp[snp_id].split(':')
+                original_chromosome, original_position = original_coord.split(':')
+
+                if new_position != original_position:
+                    coords_to_update.append((snp_id, new_position))
+
+                if new_chromosome != original_chromosome:
+                    chromosomes_to_update.append((snp_id, new_chromosome))
+
+            # if the snp isn't in dbsnp it has been deleted
+            else:
+                snps_to_delete.append(snp_id)
 
     return snps_to_delete, snps_to_update, coords_to_update, chromosomes_to_update
 
