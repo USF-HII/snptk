@@ -12,6 +12,8 @@ sys.path.append('../snptk')
 
 def parse_grch38_dbsnp(fname):
 
+    debug(f'Began parsing GRCh38')
+
     db ={}
 
     with gzip.open(fname, 'rt') as f:
@@ -21,15 +23,26 @@ def parse_grch38_dbsnp(fname):
 
             db[rsid] = (chromosome, strand)
 
+    debug(f'Finishing parsing GRCh38')
+
     return db
 
 def map_chromosomes(grch37, grch38_db, outfile):
 
+    debug(f'Began mapping GRCh37 chromosomes')
+
+    snps = {}
     with gzip.open(outfile + '.gz', 'wt') as out:
         with gzip.open(grch37, 'rt') as f:
             for line in f:
                 fields = line.strip().split()
                 rsid, chromosome, position = fields[:]
+
+                # makes sure no duplicate rs #'s in outfile
+                if rsid in snps:
+                    continue
+
+                snps[rsid] = None
 
                 rsid = rsid[2:]
 
@@ -41,6 +54,8 @@ def map_chromosomes(grch37, grch38_db, outfile):
                     continue
 
                 print(rsid + " " + chromosome + " " + position + " " + strand, file=out)
+
+    debug(f'Finished mapping GRCh37 chromosomes')
 
 def main(argv):
 
