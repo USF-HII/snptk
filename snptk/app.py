@@ -127,8 +127,8 @@ def snpid_from_coord(args):
     if args['keep_multi_snp_mappings']:
         keep_multi = True
 
-    if args['keep_ambig_rsids']:
-        keep_ambig_rsids = True
+    if args['keep_unmapped_rsids']:
+        keep_unmapped_rsids = True
 
     coordinates = set()
     snps = set()
@@ -141,7 +141,7 @@ def snpid_from_coord(args):
 
     dbsnp = snptk.core.execute_load(snptk.core.load_dbsnp_by_coordinate, dbsnp_fname, coordinates, merge_method='extend')
 
-    snps_to_delete, snps_to_update, multi_snps = update_logic_snpid_from_coord(bim_entries, snps, dbsnp, keep_multi, keep_ambig_rsids)
+    snps_to_delete, snps_to_update, multi_snps = update_logic_snpid_from_coord(bim_entries, snps, dbsnp, keep_multi, keep_unmapped_rsids)
 
     with open(join(output_prefix, 'deleted_snps.txt'), 'w') as f:
         for snp_id in snps_to_delete:
@@ -154,9 +154,9 @@ def snpid_from_coord(args):
     if len(multi_snps) > 0:
         with open(join(output_prefix, 'multi_snp_mappings.txt'), 'w') as f:
             for chr_pos, mappings in multi_snps:
-                print(chr_pos + '\t'+ ', '.join(mappings), file=f)
+                print(chr_pos + '\t'+ ','.join(mappings), file=f)
 
-def update_logic_snpid_from_coord(bim_entries, snps, dbsnp, keep_multi=False, keep_ambig_rsids=False):
+def update_logic_snpid_from_coord(bim_entries, snps, dbsnp, keep_multi=False, keep_unmapped_rsids=False):
 
     snps_to_update = []
     snps_to_delete = []
@@ -180,7 +180,7 @@ def update_logic_snpid_from_coord(bim_entries, snps, dbsnp, keep_multi=False, ke
                     else:
                         continue
                 else:
-                    if keep_ambig_rsids and snp.startswith('rs'):
+                    if keep_unmapped_rsids and snp.startswith('rs'):
                         continue
                     snps_to_delete.append(snp)
             else:
@@ -190,7 +190,7 @@ def update_logic_snpid_from_coord(bim_entries, snps, dbsnp, keep_multi=False, ke
                     snp = dbsnp[k][0]
 
         else:
-            if keep_ambig_rsids and snp.startswith('rs'):
+            if keep_unmapped_rsids and snp.startswith('rs'):
                 continue
             debug('NO_MATCH: ' + '\t'.join(entry.values()))
             snps_to_delete.append(snp)
