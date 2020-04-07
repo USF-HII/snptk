@@ -11,9 +11,10 @@ def test_data(path):
     return join(abspath(dirname(__file__)), 'data', path)
 
 UpdateLogicOutput = namedtuple("UpdateLogicOutput", ["snps_del", "snps_up", "coords_up", "chroms_up"])
+
 UpdateLogic_snpid_from_coord_Output = namedtuple("UpdateLogicOutput", ["snps_del", "snps_up", "multi_snps"])
 
-class TestSnpTkAppUpdateLogic(unittest.TestCase):
+class TestSnpTkAppUpdateLogicUpdateSnpIdAndPosition(unittest.TestCase):
 
     #-----------------------------------------------------------------------------------
     # update_snpid_and_position tests
@@ -79,50 +80,9 @@ class TestSnpTkAppUpdateLogic(unittest.TestCase):
 
         self.assertEqual(snptk.app.update_logic_update_snpid_and_position(snp_map, dbsnp), expected)
 
-    #-----------------------------------------------------------------------------------
-    # update_snpid_from_coord tests
-    #-----------------------------------------------------------------------------------
-
-    def test_k_not_in_dbsnp(self):
-        bim_entries = [{
-            'chromosome': '6',
-            'snp_id': 'rs123',
-            'distance': '0',
-            'position': '1111',
-            'allele_1': 'A',
-            'allele_2': 'T'
-             }]
-        snps = ['rs123']
-        dbsnp = {}
-        keep_multi=False
-        keep_ambig_rsids=False
-
-        expected = UpdateLogic_snpid_from_coord_Output(
-                snps_del=['rs123'], snps_up=[], multi_snps=[] )
-
-        self.assertEqual(snptk.app.update_logic_snpid_from_coord(bim_entries, snps, dbsnp, keep_multi, keep_ambig_rsids), expected)
-
-    def test_k_not_in_dbsnp_but_keep_ambig_rsids_true(self):
-        bim_entries = [{
-            'chromosome': '6',
-            'snp_id': 'rs123',
-            'distance': '0',
-            'position': '1111',
-            'allele_1': 'A',
-            'allele_2': 'T'
-             }]
-        snps = ['rs123']
-        dbsnp = {}
-        keep_multi=False
-        keep_ambig_rsids=True
-
-        expected = UpdateLogic_snpid_from_coord_Output(
-                snps_del=[], snps_up=[], multi_snps=[] )
-
-        self.assertEqual(snptk.app.update_logic_snpid_from_coord(bim_entries, snps, dbsnp, keep_multi, keep_ambig_rsids), expected)
-
-    def test_k_in_dbsnp_but_not_multi_snped_mapped_with_update(self):
-        bim_entries = [{
+class TestSnpTkAppUpdateLogicSnpIdFromCoord(unittest.TestCase):
+    def setUp(self):
+        self.bim_entries = [{
             'chromosome': '6',
             'snp_id': 'rs123',
             'distance': '0',
@@ -130,135 +90,129 @@ class TestSnpTkAppUpdateLogic(unittest.TestCase):
             'allele_1': 'A',
             'allele_2': 'T'
              }]
+
+        self.bim_entries_no_rs = [{
+            'chromosome': '6',
+            'snp_id': '123',
+            'distance': '0',
+            'position': '123',
+            'allele_1': 'A',
+            'allele_2': 'T'
+             }]
+
+    def test_not_in_dbsnp(self):
+        snps = ['rs123']
+        dbsnp = {}
+        keep_multi = False
+        keep_unmapped_rsids = False
+
+        expected = UpdateLogic_snpid_from_coord_Output(
+                snps_del=['rs123'], snps_up=[], multi_snps=[] )
+
+        self.assertEqual(snptk.app.update_logic_snpid_from_coord(self.bim_entries, snps, dbsnp, keep_multi, keep_unmapped_rsids), expected)
+
+    def test_not_in_dbsnp_keep_unmapped_rsids(self):
+        snps = ['rs123']
+        dbsnp = {}
+        keep_multi = False
+        keep_unmapped_rsids = True
+
+        expected = UpdateLogic_snpid_from_coord_Output(
+                snps_del=[], snps_up=[], multi_snps=[] )
+
+        self.assertEqual(snptk.app.update_logic_snpid_from_coord(self.bim_entries, snps, dbsnp, keep_multi, keep_unmapped_rsids), expected)
+
+    def test_update_snp(self):
+        """
+        Inside of dbsnp but not multi mapped to mutiple snps
+
+        6:123 maps to only rs456 inside of dbsnp
+        """
         snps = ['rs123']
         dbsnp = {'6:123' :  ['rs456']}
-        keep_multi=False
-        keep_ambig_rsids=False
+        keep_multi = False
+        keep_unmapped_rsids = False
 
         expected = UpdateLogic_snpid_from_coord_Output(
                 snps_del=[], snps_up=[('rs123', 'rs456')], multi_snps=[] )
 
-        self.assertEqual(snptk.app.update_logic_snpid_from_coord(bim_entries, snps, dbsnp, keep_multi, keep_ambig_rsids), expected)
+        self.assertEqual(snptk.app.update_logic_snpid_from_coord(self.bim_entries, snps, dbsnp, keep_multi, keep_unmapped_rsids), expected)
 
-    def test_k_in_dbsnp_but_not_multi_snped_mapped_no_update(self):
-        bim_entries = [{
-            'chromosome': '6',
-            'snp_id': 'rs123',
-            'distance': '0',
-            'position': '123',
-            'allele_1': 'A',
-            'allele_2': 'T'
-             }]
+    def test_no_update(self):
         snps = ['rs123']
         dbsnp = {'6:123' :  ['rs123']}
-        keep_multi=False
-        keep_ambig_rsids=False
+        keep_multi = False
+        keep_unmapped_rsids = False
 
         expected = UpdateLogic_snpid_from_coord_Output(
                 snps_del=[], snps_up=[], multi_snps=[] )
 
-        self.assertEqual(snptk.app.update_logic_snpid_from_coord(bim_entries, snps, dbsnp, keep_multi, keep_ambig_rsids), expected)
+        self.assertEqual(snptk.app.update_logic_snpid_from_coord(self.bim_entries, snps, dbsnp, keep_multi, keep_unmapped_rsids), expected)
 
-    def test_k_in_dbsnp_multi_snped_mapped_but_keep_multi_is_false(self):
-        bim_entries = [{
-            'chromosome': '6',
-            'snp_id': 'rs123',
-            'distance': '0',
-            'position': '123',
-            'allele_1': 'A',
-            'allele_2': 'T'
-             }]
+    def test_multi_snp_unmapped_rsids_false(self):
         snps = ['rs123']
         dbsnp = {'6:123' :  ['rs123', 'rs456']}
-        keep_multi=False
-        keep_ambig_rsids=False
+        keep_multi = False
+        keep_unmapped_rsids = False
 
         expected = UpdateLogic_snpid_from_coord_Output(
                 snps_del=['rs123'], snps_up=[], multi_snps=[] )
 
-        self.assertEqual(snptk.app.update_logic_snpid_from_coord(bim_entries, snps, dbsnp, keep_multi, keep_ambig_rsids), expected)
+        self.assertEqual(snptk.app.update_logic_snpid_from_coord(self.bim_entries, snps, dbsnp, keep_multi, keep_unmapped_rsids), expected)
 
-    def test_k_in_dbsnp_multi_snped_mapped_but_keep_multi_is_false_and_keep_ambig_rsids_true(self):
-        bim_entries = [{
-            'chromosome': '6',
-            'snp_id': 'rs123',
-            'distance': '0',
-            'position': '123',
-            'allele_1': 'A',
-            'allele_2': 'T'
-             }]
+    def test_unmapped_rsids(self):
         snps = ['rs123']
         dbsnp = {'6:123' :  ['rs123', 'rs456']}
-        keep_multi=False
-        keep_ambig_rsids=True
+        keep_multi = False
+        keep_unmapped_rsids = True
 
         expected = UpdateLogic_snpid_from_coord_Output(
                 snps_del=[], snps_up=[], multi_snps=[] )
 
-        self.assertEqual(snptk.app.update_logic_snpid_from_coord(bim_entries, snps, dbsnp, keep_multi, keep_ambig_rsids), expected)
+        self.assertEqual(snptk.app.update_logic_snpid_from_coord(self.bim_entries, snps, dbsnp, keep_multi, keep_unmapped_rsids), expected)
 
-    def test_k_in_dbsnp_multi_snped_mapped_but_keep_multi_is_true_and_no_update(self):
-        bim_entries = [{
-            'chromosome': '6',
-            'snp_id': 'rs123',
-            'distance': '0',
-            'position': '123',
-            'allele_1': 'A',
-            'allele_2': 'T'
-             }]
+    def test_keep_multi_no_update(self):
         snps = ['rs123']
         dbsnp = {'6:123' :  ['rs123', 'rs456']}
-        keep_multi=True
-        keep_ambig_rsids=False
+        keep_multi = True
+        keep_unmapped_rsids = False
 
         expected = UpdateLogic_snpid_from_coord_Output(
                 snps_del=[], snps_up=[], multi_snps=[('6:123', ['rs123', 'rs456'])] )
 
-        self.assertEqual(snptk.app.update_logic_snpid_from_coord(bim_entries, snps, dbsnp, keep_multi, keep_ambig_rsids), expected)
+        self.assertEqual(snptk.app.update_logic_snpid_from_coord(self.bim_entries, snps, dbsnp, keep_multi, keep_unmapped_rsids), expected)
 
-
-    def test_k_in_dbsnp_multi_snped_mapped_but_keep_multi_is_true_with_update(self):
-        bim_entries = [{
-            'chromosome': '6',
-            'snp_id': 'rs123',
-            'distance': '0',
-            'position': '123',
-            'allele_1': 'A',
-            'allele_2': 'T'
-             }]
+    def test_keep_multi_update(self):
         snps = ['rs123']
         dbsnp = {'6:123' :  ['rs456', 'rs789']}
-        keep_multi=True
-        keep_ambig_rsids=False
+        keep_multi = True
+        keep_unmapped_rsids = False
 
         expected = UpdateLogic_snpid_from_coord_Output(
                 snps_del=[], snps_up=[('rs123', 'rs456')], multi_snps=[('6:123', ['rs456', 'rs789'])] )
 
-        self.assertEqual(snptk.app.update_logic_snpid_from_coord(bim_entries, snps, dbsnp, keep_multi, keep_ambig_rsids), expected)
+        self.assertEqual(snptk.app.update_logic_snpid_from_coord(self.bim_entries, snps, dbsnp, keep_multi, keep_unmapped_rsids), expected)
 
-    def test_k_in_dbsnp_multi_snped_mapped_but_keep_multi_is_true_with_no_update_but_updated_snp_already_in_bin(self):
-        bim_entries = [{
-            'chromosome': '6',
-            'snp_id': 'rs123',
-            'distance': '0',
-            'position': '123',
-            'allele_1': 'A',
-            'allele_2': 'T'
-             }]
+    def test_keep_multi_no_update_snp_already_in_bim(self):
         snps = ['rs123', 'rs456']
         dbsnp = {'6:123' :  ['rs456', 'rs789']}
-        keep_multi=True
-        keep_ambig_rsids=False
+        keep_multi = True
+        keep_unmapped_rsids = False
 
         expected = UpdateLogic_snpid_from_coord_Output(
                 snps_del=[], snps_up=[], multi_snps=[('6:123', ['rs456', 'rs789'])] )
 
-        self.assertEqual(snptk.app.update_logic_snpid_from_coord(bim_entries, snps, dbsnp, keep_multi, keep_ambig_rsids), expected)
+        self.assertEqual(snptk.app.update_logic_snpid_from_coord(self.bim_entries, snps, dbsnp, keep_multi, keep_unmapped_rsids), expected)
 
+    def test_no_rs_keep_unmapped(self):
+        snps = ['rs123']
+        dbsnp = {}
+        keep_multi = False
+        keep_unmapped_rsids = True
 
+        expected = UpdateLogic_snpid_from_coord_Output(
+                snps_del=['123'], snps_up=[], multi_snps=[] )
 
-
-
-
+        self.assertEqual(snptk.app.update_logic_snpid_from_coord(self.bim_entries_no_rs, snps, dbsnp, keep_multi, keep_unmapped_rsids), expected)
 
 
