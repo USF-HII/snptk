@@ -6,6 +6,10 @@ import snptk.util
 
 from snptk.util import debug
 
+#-----------------------------------------------------------------------------------
+# update_snpid_and_position
+#-----------------------------------------------------------------------------------
+
 def update_snpid_and_position(args):
     bim_fname = args['bim']
     dbsnp_fname = args['dbsnp']
@@ -39,7 +43,7 @@ def update_snpid_and_position(args):
     # Generate edit instructions
     #-----------------------------------------------------------------------------------
 
-    snps_to_delete, snps_to_update, coords_to_update, chromosomes_to_update = update_logic(snp_map, dbsnp)
+    snps_to_delete, snps_to_update, coords_to_update, chromosomes_to_update = update_logic_update_snpid_and_position(snp_map, dbsnp)
 
     with open(join(output_prefix, 'deleted_snps.txt'), 'w') as f:
         for snp_id in snps_to_delete:
@@ -57,66 +61,7 @@ def update_snpid_and_position(args):
         for snp_id, chromosome in chromosomes_to_update:
             print(snp_id + '\t' + chromosome, file=f)
 
-
-def snpid_from_coord(args):
-
-    bim_fname = args['bim']
-    bim_offset = int(args['bim_offset'])
-    dbsnp_fname = args['dbsnp']
-    output_prefix = args['output_prefix']
-
-    coordinates = set()
-
-    bim_entries = snptk.core.load_bim(bim_fname, offset=bim_offset)
-
-    for entry in bim_entries:
-        coordinates.add(entry['chromosome'] + ':' + entry['position'])
-
-    db = snptk.core.execute_load(snptk.core.load_dbsnp_by_coordinate, dbsnp_fname, coordinates, merge_method='extend')
-
-    snps_to_update = []
-    snps_to_delete = []
-    multi_snps = []
-    for entry in bim_entries:
-        k = entry['chromosome'] + ':' + entry['position']
-
-        if k in db:
-            if len(db[k]) > 1:
-                debug(f'Has more than one snp_id db[{k}] = {str(db[k])}')
-                if args['keep_multi_snp_mappings']:
-                    multi_snps.append((k, db[k]))
-
-                    # this prevents rs123 being updated to rs123. No change
-                    if db[k][0] != entry['snp_id']:
-                        snps_to_update.append((entry['snp_id'], db[k][0]))
-                    else:
-                        continue
-                else:
-                    snps_to_delete.append(entry['snp_id'])
-            else:
-                if db[k][0] != entry['snp_id']:
-                    debug(f'Rewrote snp_id {entry["snp_id"]} to {db[k][0]} for position {k}')
-                    snps_to_update.append((entry['snp_id'], db[k][0]))
-                    entry['snp_id'] = db[k][0]
-
-        else:
-            debug('NO_MATCH: ' + '\t'.join(entry.values()))
-            snps_to_delete.append(entry['snp_id'])
-
-    with open(join(output_prefix, 'deleted_snps.txt'), 'w') as f:
-        for snp_id in snps_to_delete:
-            print(snp_id, file=f)
-
-    with open(join(output_prefix, 'updated_snps.txt'), 'w') as f:
-        for snp_id, snp_id_new in snps_to_update:
-            print(snp_id + '\t' + snp_id_new, file=f)
-
-    if len(multi_snps) > 0:
-        with open(join(output_prefix, 'multi_snp_mappings.txt'), 'w') as f:
-            for chr_pos, mappings in multi_snps:
-                print(chr_pos + '\t'+ ', '.join(mappings), file=f)
-
-def update_logic(snp_map, dbsnp):
+def update_logic_update_snpid_and_position(snp_map, dbsnp):
 
     snps_to_delete = []
     snps_to_update = []
@@ -168,6 +113,94 @@ def update_logic(snp_map, dbsnp):
 
     return snps_to_delete, snps_to_update, coords_to_update, chromosomes_to_update
 
+#-----------------------------------------------------------------------------------
+# snpid_from_coord
+#-----------------------------------------------------------------------------------
+
+def snpid_from_coord(args):
+
+    bim_fname = args['bim']
+    bim_offset = int(args['bim_offset'])
+    dbsnp_fname = args['dbsnp']
+    output_prefix = args['output_prefix']
+
+    if args['keep_multi_snp_mappings']:
+        keep_multi = True
+
+    if args['keep_ambig_rsids']:
+        keep_ambig_rsids = True
+
+    coordinates = set()
+    snps = set()
+
+    bim_entries = snptk.core.load_bim(bim_fname, offset=bim_offset)
+
+    for entry in bim_entries:
+        snps.add(entry['snp_id'])
+        coordinates.add(entry['chromosome'] + ':' + entry['position'])
+
+    dbsnp = snptk.core.execute_load(snptk.core.load_dbsnp_by_coordinate, dbsnp_fname, coordinates, merge_method='extend')
+
+    snps_to_delete, snps_to_update, multi_snps = update_logic_snpid_from_coord(bim_entries, snps, dbsnp, keep_multi, keep_ambig_rsids)
+
+    with open(join(output_prefix, 'deleted_snps.txt'), 'w') as f:
+        for snp_id in snps_to_delete:
+            print(snp_id, file=f)
+
+    with open(join(output_prefix, 'updated_snps.txt'), 'w') as f:
+        for snp_id, snp_id_new in snps_to_update:
+            print(snp_id + '\t' + snp_id_new, file=f)
+
+    if len(multi_snps) > 0:
+        with open(join(output_prefix, 'multi_snp_mappings.txt'), 'w') as f:
+            for chr_pos, mappings in multi_snps:
+                print(chr_pos + '\t'+ ', '.join(mappings), file=f)
+
+def update_logic_snpid_from_coord(bim_entries, snps, dbsnp, keep_multi=False, keep_ambig_rsids=False):
+
+    snps_to_update = []
+    snps_to_delete = []
+    multi_snps = []
+
+    for entry in bim_entries:
+        k = entry['chromosome'] + ':' + entry['position']
+        snp = entry['snp_id']
+
+        if k in dbsnp:
+            if len(dbsnp[k]) > 1:
+                debug(f'Has more than one snp_id dbsnp[{k}] = {str(dbsnp[k])}')
+                if keep_multi:
+                    multi_snps.append((k, dbsnp[k]))
+
+                    # this prevents rs123 being updated to rs123 (No change)
+                    # this also checks to see if snp already in bim so duplicate
+                    # snps aren't included twice
+                    if dbsnp[k][0] != snp and dbsnp[k][0] not in snps:
+                        snps_to_update.append((snp, dbsnp[k][0]))
+                    else:
+                        continue
+                else:
+                    if keep_ambig_rsids and snp.startswith('rs'):
+                        continue
+                    snps_to_delete.append(snp)
+            else:
+                if dbsnp[k][0] != snp:
+                    debug(f'Rewrote snp_id {snp} to {dbsnp[k][0]} for position {k}')
+                    snps_to_update.append((snp, dbsnp[k][0]))
+                    snp = dbsnp[k][0]
+
+        else:
+            if keep_ambig_rsids and snp.startswith('rs'):
+                continue
+            debug('NO_MATCH: ' + '\t'.join(entry.values()))
+            snps_to_delete.append(snp)
+
+    return snps_to_delete, snps_to_update, multi_snps
+
+#-----------------------------------------------------------------------------------
+# Remove Duplicates
+#-----------------------------------------------------------------------------------
+
 def remove_duplicates(args):
 
     plink_fname = args['plink_prefix']
@@ -204,6 +237,10 @@ def remove_duplicates(args):
     print("Finished fixing Fam IDs")
     print("***** COMPLETE ******")
 
+#-----------------------------------------------------------------------------------
+# snpid_from_coord_update
+#-----------------------------------------------------------------------------------
+
 def snpid_from_coord_update(args):
 
     plink_fname = args['plink_prefix']
@@ -224,6 +261,10 @@ def snpid_from_coord_update(args):
     subprocess.call(command, shell=True)
     print("Finished Updating SNPs")
     print("***** COMPLETE ******")
+
+#-----------------------------------------------------------------------------------
+# snpid_and_position_update
+#-----------------------------------------------------------------------------------
 
 def snpid_and_position_update(args):
 

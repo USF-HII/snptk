@@ -29,6 +29,9 @@ def main():
     parser_mex = parser_snpid_from_coord.add_mutually_exclusive_group()
     parser_mex.add_argument('--keep-multi-snp-mappings')
 
+    parser_mex_2 = parser_snpid_from_coord.add_mutually_exclusive_group()
+    parser_mex_2.add_argument('--keep-ambig-rsids')
+
     parser_snpid_from_coord.add_argument('-o', '--output_prefix')
 
     #-----------------------------------------------------------------------------------------------------
