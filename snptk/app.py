@@ -124,11 +124,8 @@ def snpid_from_coord(args):
     dbsnp_fname = args['dbsnp']
     output_prefix = args['output_prefix']
 
-    if args['keep_multi_snp_mappings']:
-        keep_multi = True
-
-    if args['keep_unmapped_rsids']:
-        keep_unmapped_rsids = True
+    keep_multi = args['keep_multi_snp_mappings']
+    keep_unmapped_rsids = args['keep_unmapped_rsids']
 
     coordinates = set()
     snps = set()
