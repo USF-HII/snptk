@@ -14,7 +14,7 @@ def update_snpid_and_position(args):
     bim_fname = args['bim']
     dbsnp_fname = args['dbsnp']
     rs_merge_fname = args['rs_merge']
-    bim_offset = int(args['bim_offset'])
+    bim_offset = args['bim_offset']
     output_prefix = args['output_prefix']
 
     rs_merge = snptk.core.execute_load(snptk.core.load_rs_merge, rs_merge_fname, merge_method='update')
@@ -120,7 +120,7 @@ def update_logic_update_snpid_and_position(snp_map, dbsnp):
 def snpid_from_coord(args):
 
     bim_fname = args['bim']
-    bim_offset = int(args['bim_offset'])
+    bim_offset = args['bim_offset']
     dbsnp_fname = args['dbsnp']
     output_prefix = args['output_prefix']
 

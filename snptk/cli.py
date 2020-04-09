@@ -22,7 +22,7 @@ def main():
 
     parser_snpid_from_coord.add_argument('bim')
 
-    parser_snpid_from_coord.add_argument('--bim-offset', default='0')
+    parser_snpid_from_coord.add_argument('--bim-offset', type=int, default=0)
 
     parser_snpid_from_coord.add_argument('-d', '--dbsnp')
 
@@ -52,7 +52,7 @@ def main():
 
     parser_update_snpids.add_argument('-r', '--rs_merge')
 
-    parser_update_snpids.add_argument('--bim-offset', default='0')
+    parser_update_snpids.add_argument('--bim-offset', type=int, default=0)
 
     parser_update_snpids.add_argument('-o', '--output-prefix')
 
