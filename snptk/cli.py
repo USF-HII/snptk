@@ -30,7 +30,7 @@ def main():
 
     parser_snpid_from_coord.add_argument('--keep-unmapped-rsids', action="store_true")
 
-    parser_snpid_from_coord.add_argument('-o', '--output_prefix')
+    parser_snpid_from_coord.add_argument('-o', '--output-prefix')
 
     #-----------------------------------------------------------------------------------------------------
     # update-snpid-and-position
@@ -44,11 +44,7 @@ def main():
 
     parser_update_snpids.add_argument('-d', '--dbsnp')
 
-    #parser_update_snpids.add_argument('--ucsc')
-
-    #parser_update_snpids.add_argument('-s', '--snp_history')
-
-    parser_update_snpids.add_argument('-r', '--rs_merge')
+    parser_update_snpids.add_argument('-r', '--rs-merge')
 
     parser_update_snpids.add_argument('--bim-offset', type=int, default=0)
 
@@ -62,9 +58,9 @@ def main():
 
     parser_remove_duplicates.set_defaults(func=snptk.app.remove_duplicates)
 
-    parser_remove_duplicates.add_argument('--plink_prefix')
+    parser_remove_duplicates.add_argument('--plink-prefix')
 
-    parser_remove_duplicates.add_argument('-o', '--output_prefix')
+    parser_remove_duplicates.add_argument('-o', '--output-prefix')
 
     #-----------------------------------------------------------------------------------------------------
     # plink update snpid from coordniate
@@ -75,15 +71,15 @@ def main():
 
     parser_snpid_from_coord_update.set_defaults(func=snptk.app.snpid_from_coord_update)
 
-    parser_snpid_from_coord_update.add_argument('--plink_prefix')
+    parser_snpid_from_coord_update.add_argument('--plink-prefix')
 
-    parser_snpid_from_coord_update.add_argument('--update_file')
+    parser_snpid_from_coord_update.add_argument('--update-file')
 
-    parser_snpid_from_coord_update.add_argument('--delete_file')
+    parser_snpid_from_coord_update.add_argument('--delete-file')
 
-    parser_snpid_from_coord_update.add_argument('--out_name')
+    parser_snpid_from_coord_update.add_argument('--out-name')
 
-    parser_snpid_from_coord_update.add_argument('-o', '--output_prefix')
+    parser_snpid_from_coord_update.add_argument('-o', '--output-prefix')
 
     #-----------------------------------------------------------------------------------------------------
     # plink update snpid and position
@@ -94,19 +90,19 @@ def main():
 
     parser_snpid_and_position_update.set_defaults(func=snptk.app.snpid_and_position_update)
 
-    parser_snpid_and_position_update.add_argument('--plink_prefix')
+    parser_snpid_and_position_update.add_argument('--plink-prefix')
 
-    parser_snpid_and_position_update.add_argument('--delete_file')
+    parser_snpid_and_position_update.add_argument('--delete-file')
 
-    parser_snpid_and_position_update.add_argument('--update_file')
+    parser_snpid_and_position_update.add_argument('--update-file')
 
-    parser_snpid_and_position_update.add_argument('--coord_file')
+    parser_snpid_and_position_update.add_argument('--coord-file')
 
-    parser_snpid_and_position_update.add_argument('--chr_file')
+    parser_snpid_and_position_update.add_argument('--chr-file')
 
-    parser_snpid_and_position_update.add_argument('--out_name')
+    parser_snpid_and_position_update.add_argument('--out-name')
 
-    parser_snpid_and_position_update.add_argument('-o', '--output_prefix')
+    parser_snpid_and_position_update.add_argument('-o', '--output-prefix')
 
     #-----------------------------------------------------------------------------------------------------
     # parse
