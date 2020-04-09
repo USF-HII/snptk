@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+BASE=$(readlink -f $(dirname "$0")/..)
+ME=$(basename "$0")
+TEMP=${BASE}/tmp/${ME%.sh}
+
+#-----------------------------------------------------------------------------------------------------
+# Test snpid-from-coord
+#-----------------------------------------------------------------------------------------------------
+TEST=${TEMP}/snpid-from-coord
+
+[[ -d ${TEST} ]] && /bin/rm -r ${TEST}
+
+mkdir -p ${TEST}/{output,input}
+
+cat <<EOF > ${TEST}/input/input.bim
+3	rs123	0	23444	A	C
+4	rs123	0	23444	A	C
+EOF
+
+cat <<EOF | gzip -c > ${TEST}/input/dbsnp.gz
+123	3	23444	0
+EOF
+
+${BASE}/bin/snptk snpid-from-coord \
+  --dbsnp=${TEST}/input/dbsnp.gz \
+  --output-prefix=${TEST}/output/ \
+  ${TEST}/input/input.bim
+
+diff <(ls ${TEST}/output | sort) <(echo deleted_snps.txt; echo updated_snps.txt)
+diff <(cat ${TEST}/output/deleted_snps.txt) <(echo "rs123")
+diff <(cat ${TEST}/output/updated_snps.txt) /dev/null
