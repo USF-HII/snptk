@@ -1,0 +1,39 @@
+name: main
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+env:
+  DOCKER_USER: "${{ secrets.DOCKER_USER }}"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - id: tag
+        run: echo "::set-output name=tag::$(date +'%Y-%m-%d')-${GITHUB_SHA:0:7}"
+
+      - run: "echo __version__ = \\'${{steps.tag.outputs.tag}}\\' > snptk/release.py"
+
+      - run: cat snptk/release.py
+
+      - run: docker build -t ${{ secrets.DOCKER_USER }}/snptk .
+
+      - run: docker run ${{ secrets.DOCKER_USER}}/snptk snptk --help
+
+      - run: |
+          docker tag ${{ secrets.DOCKER_USER }}/snptk ${{ secrets.DOCKER_USER }}/snptk:${{steps.tag.outputs.tag}}
+          docker tag ${{ secrets.DOCKER_USER }}/snptk ${{ secrets.DOCKER_USER }}/snptk:latest
+
+      - run: docker login --username ${{ secrets.DOCKER_USER }} --password ${{ secrets.DOCKER_PASSWORD }}
+
+      - run: |
+          docker push ${{ secrets.DOCKER_USER }}/snptk:${{steps.tag.outputs.tag}}
+          docker push ${{ secrets.DOCKER_USER }}/snptk:latest
+
