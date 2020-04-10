@@ -6,29 +6,142 @@ BASE=$(readlink -f $(dirname "$0")/..)
 ME=$(basename "$0")
 TEMP=${BASE}/tmp/${ME%.sh}
 
+set_ifs() { oldIFS=${IFS}; IFS=$'\n'; }
+
+unset_ifs() { IFS=${oldIFS}; }
+
+prep_dir() {
+  local dir=$1
+  if [[ -d ${dir} ]]; then
+    /bin/rm -r ${dir}
+  fi
+  /bin/mkdir -p ${dir}/{input,output}
+}
+
+cmp_file() {
+  local file=$1; shift
+
+  if ! diff <(cat ${file} | sort) \
+            <(set_ifs
+              if [[ $# -lt 1 ]]; then
+                cat /dev/null
+              else
+                for line in "$@"; do echo "${line}" | tr ' ' '\t'; done | sort
+              fi
+              unset_ifs); then
+    echo file=$file
+    exit 1
+  fi
+}
+
+cmp_chr_update() {
+  cmp_file ${TEST}/output/chr_update.txt "$@"
+}
+
+cmp_coord_update() {
+  cmp_file ${TEST}/output/coord_update.txt "$@"
+}
+
+cmp_deleted_snps() {
+  cmp_file ${TEST}/output/deleted_snps.txt "$@"
+}
+
+cmp_updated_snps() {
+  cmp_file ${TEST}/output/updated_snps.txt "$@"
+}
+
+cmp_dir() {
+  /bin/true
+}
+
+rsmerge() {
+  set_ifs
+  for line in "$@"; do
+    echo ${line} | tr ' ' '\t'
+  done | gzip -c > ${TEST}/input/rsmerge.txt.gz
+  unset_ifs
+}
+
+dbsnp() {
+  set_ifs
+  for line in "$@"; do
+    echo ${line} | tr ' ' '\t'
+  done | gzip -c > ${TEST}/input/dbsnp.txt.gz
+  unset_ifs
+}
+
+test_bim() {
+  set_ifs
+  for line in "$@"; do
+    echo ${line} | tr ' ' '\t'
+  done > ${TEST}/input/test.bim
+  unset_ifs
+}
+
+run_snpid_from_coord() {
+  ${BASE}/bin/snptk snpid-from-coord \
+    --dbsnp=${TEST}/input/dbsnp.txt.gz \
+    --output-prefix=${TEST}/output/ \
+    "$@" \
+    ${TEST}/input/test.bim
+}
+
+run_update_snpid_and_position() {
+  ${BASE}/bin/snptk update-snpid-and-position \
+    --dbsnp=${TEST}/input/dbsnp.txt.gz \
+    --rs-merge=${TEST}/input/rsmerge.txt.gz \
+    --output-prefix=${TEST}/output/ \
+    "$@" \
+    ${TEST}/input/test.bim
+
+}
+
 #-----------------------------------------------------------------------------------------------------
-# Test snpid-from-coord
+# snpid-from-coord
 #-----------------------------------------------------------------------------------------------------
 TEST=${TEMP}/snpid-from-coord
 
-[[ -d ${TEST} ]] && /bin/rm -r ${TEST}
+prep_dir ${TEST}
 
-mkdir -p ${TEST}/{output,input}
+test_bim \
+  "3 rs123 0 3444 A C" \
+  "3 rs345 0 8888 A C"
 
-cat <<EOF > ${TEST}/input/input.bim
-3	rs123	0	23444	A	C
-4	rs123	0	23444	A	C
-EOF
+dbsnp \
+  "456 3 3444 0" \
+  "789 3 8888 0"
 
-cat <<EOF | gzip -c > ${TEST}/input/dbsnp.gz
-123	3	23444	0
-EOF
+run_snpid_from_coord
 
-${BASE}/bin/snptk snpid-from-coord \
-  --dbsnp=${TEST}/input/dbsnp.gz \
-  --output-prefix=${TEST}/output/ \
-  ${TEST}/input/input.bim
+cmp_deleted_snps
 
-diff <(ls ${TEST}/output | sort) <(echo deleted_snps.txt; echo updated_snps.txt)
-diff <(cat ${TEST}/output/deleted_snps.txt) <(echo "rs123")
-diff <(cat ${TEST}/output/updated_snps.txt) /dev/null
+cmp_updated_snps \
+  "rs123 rs456" \
+  "rs345 rs789"
+
+#-----------------------------------------------------------------------------------------------------
+# update-snpid-and-position
+#-----------------------------------------------------------------------------------------------------
+TEST=${TEMP}/update-snpid-and-position
+
+prep_dir ${TEST}
+
+test_bim \
+  "3 rs123 0 3444 A C"
+
+dbsnp \
+  "123 3 8888 0"
+
+rsmerge \
+  "1 2"
+
+run_update_snpid_and_position
+
+cmp_chr_update
+
+cmp_coord_update \
+  "rs123 8888"
+
+cmp_deleted_snps
+
+cmp_updated_snps
