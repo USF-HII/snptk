@@ -12,6 +12,9 @@ unset_ifs() { IFS=${oldIFS}; }
 
 prep_dir() {
   local dir=$1
+
+  echo "> $(basename ${dir})"
+
   if [[ -d ${dir} ]]; then
     /bin/rm -r ${dir}
   fi
@@ -78,16 +81,16 @@ test_bim() {
   unset_ifs
 }
 
-run_snpid_from_coord() {
-  ${BASE}/bin/snptk snpid-from-coord \
+run_snptk_map_using_coord() {
+  ${BASE}/bin/snptk map-using-coord \
     --dbsnp=${TEST}/input/dbsnp.txt.gz \
     --output-prefix=${TEST}/output/ \
     "$@" \
     ${TEST}/input/test.bim
 }
 
-run_update_snpid_and_position() {
-  ${BASE}/bin/snptk update-snpid-and-position \
+run_snptk_map_using_rs_id() {
+  ${BASE}/bin/snptk map-using-rs-id \
     --dbsnp=${TEST}/input/dbsnp.txt.gz \
     --rs-merge=${TEST}/input/rsmerge.txt.gz \
     --output-prefix=${TEST}/output/ \
@@ -97,9 +100,9 @@ run_update_snpid_and_position() {
 }
 
 #-----------------------------------------------------------------------------------------------------
-# snpid-from-coord
+# snptk-map-using-coord
 #-----------------------------------------------------------------------------------------------------
-TEST=${TEMP}/snpid-from-coord
+TEST=${TEMP}/snptk-map-using-coord
 
 prep_dir ${TEST}
 
@@ -111,7 +114,7 @@ dbsnp \
   "456 3 3444 0" \
   "789 3 8888 0"
 
-run_snpid_from_coord
+run_snptk_map_using_coord
 
 cmp_deleted_snps
 
@@ -120,9 +123,9 @@ cmp_updated_snps \
   "rs345 rs789"
 
 #-----------------------------------------------------------------------------------------------------
-# update-snpid-and-position
+# snptk-map-using-rs-id
 #-----------------------------------------------------------------------------------------------------
-TEST=${TEMP}/update-snpid-and-position
+TEST=${TEMP}/snptk-map-using-rs-id
 
 prep_dir ${TEST}
 
@@ -135,7 +138,7 @@ dbsnp \
 rsmerge \
   "1 2"
 
-run_update_snpid_and_position
+run_snptk_map_using_rs_id
 
 cmp_chr_update
 

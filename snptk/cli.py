@@ -12,43 +12,43 @@ def main():
     subparsers = parser.add_subparsers(help='sub-command help')
 
     #-----------------------------------------------------------------------------------------------------
-    # snpid-from-coord
+    # map-using-coord
     #-----------------------------------------------------------------------------------------------------
 
-    parser_snpid_from_coord = subparsers.add_parser('snpid-from-coord',
-                                                    help='Fill in missing rs ids using chromosome coordinates')
+    parser_map_using_coord = subparsers.add_parser('map-using-coord',
+                                                    help='Generate edit maps using genetic coordindates of bim entry')
 
-    parser_snpid_from_coord.set_defaults(func=snptk.app.snpid_from_coord)
+    parser_map_using_coord.set_defaults(func=snptk.app.map_using_coord)
 
-    parser_snpid_from_coord.add_argument('bim')
+    parser_map_using_coord.add_argument('bim')
 
-    parser_snpid_from_coord.add_argument('--bim-offset', type=int, default=0)
+    parser_map_using_coord.add_argument('--bim-offset', type=int, default=0)
 
-    parser_snpid_from_coord.add_argument('-d', '--dbsnp')
+    parser_map_using_coord.add_argument('-d', '--dbsnp')
 
-    parser_snpid_from_coord.add_argument('--keep-multi-snp-mappings', action="store_true")
+    parser_map_using_coord.add_argument('--keep-multi-snp-mappings', action="store_true")
 
-    parser_snpid_from_coord.add_argument('--keep-unmapped-rsids', action="store_true")
+    parser_map_using_coord.add_argument('--keep-unmapped-rsids', action="store_true")
 
-    parser_snpid_from_coord.add_argument('-o', '--output-prefix')
+    parser_map_using_coord.add_argument('-o', '--output-prefix')
 
     #-----------------------------------------------------------------------------------------------------
-    # update-snpid-and-position
+    # map-using-rs-id
     #-----------------------------------------------------------------------------------------------------
 
-    parser_update_snpids = subparsers.add_parser('update-snpid-and-position', help='Update snpid and position')
+    map_using_rs_id = subparsers.add_parser('map-using-rs-id', help='Update snpid and position')
 
-    parser_update_snpids.set_defaults(func=snptk.app.update_snpid_and_position)
+    map_using_rs_id.set_defaults(func=snptk.app.map_using_rs_id)
 
-    parser_update_snpids.add_argument('bim')
+    map_using_rs_id.add_argument('bim')
 
-    parser_update_snpids.add_argument('-d', '--dbsnp')
+    map_using_rs_id.add_argument('-d', '--dbsnp')
 
-    parser_update_snpids.add_argument('-r', '--rs-merge')
+    map_using_rs_id.add_argument('-r', '--rs-merge')
 
-    parser_update_snpids.add_argument('--bim-offset', type=int, default=0)
+    map_using_rs_id.add_argument('--bim-offset', type=int, default=0)
 
-    parser_update_snpids.add_argument('-o', '--output-prefix')
+    map_using_rs_id.add_argument('-o', '--output-prefix')
 
     #-----------------------------------------------------------------------------------------------------
     # remove duplicates

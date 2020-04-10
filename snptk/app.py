@@ -7,10 +7,10 @@ import snptk.util
 from snptk.util import debug
 
 #-----------------------------------------------------------------------------------
-# update_snpid_and_position
+# map_using_rs_id
 #-----------------------------------------------------------------------------------
 
-def update_snpid_and_position(args):
+def map_using_rs_id(args):
     bim_fname = args['bim']
     dbsnp_fname = args['dbsnp']
     rs_merge_fname = args['rs_merge']
@@ -43,7 +43,7 @@ def update_snpid_and_position(args):
     # Generate edit instructions
     #-----------------------------------------------------------------------------------
 
-    snps_to_delete, snps_to_update, coords_to_update, chromosomes_to_update = update_logic_update_snpid_and_position(snp_map, dbsnp)
+    snps_to_delete, snps_to_update, coords_to_update, chromosomes_to_update = map_using_rs_id_logic(snp_map, dbsnp)
 
     with open(join(output_prefix, 'deleted_snps.txt'), 'w') as f:
         for snp_id in snps_to_delete:
@@ -61,7 +61,7 @@ def update_snpid_and_position(args):
         for snp_id, chromosome in chromosomes_to_update:
             print(snp_id + '\t' + chromosome, file=f)
 
-def update_logic_update_snpid_and_position(snp_map, dbsnp):
+def map_using_rs_id_logic(snp_map, dbsnp):
 
     snps_to_delete = []
     snps_to_update = []
@@ -114,10 +114,10 @@ def update_logic_update_snpid_and_position(snp_map, dbsnp):
     return snps_to_delete, snps_to_update, coords_to_update, chromosomes_to_update
 
 #-----------------------------------------------------------------------------------
-# snpid_from_coord
+# map_using_coord
 #-----------------------------------------------------------------------------------
 
-def snpid_from_coord(args):
+def map_using_coord(args):
 
     bim_fname = args['bim']
     bim_offset = args['bim_offset']
@@ -138,7 +138,7 @@ def snpid_from_coord(args):
 
     dbsnp = snptk.core.execute_load(snptk.core.load_dbsnp_by_coordinate, dbsnp_fname, coordinates, merge_method='extend')
 
-    snps_to_delete, snps_to_update, multi_snps = update_logic_snpid_from_coord(bim_entries, snps, dbsnp, keep_multi, keep_unmapped_rsids)
+    snps_to_delete, snps_to_update, multi_snps = map_using_coord_logic(bim_entries, snps, dbsnp, keep_multi, keep_unmapped_rsids)
 
     with open(join(output_prefix, 'deleted_snps.txt'), 'w') as f:
         for snp_id in snps_to_delete:
@@ -153,7 +153,7 @@ def snpid_from_coord(args):
             for chr_pos, mappings in multi_snps:
                 print(chr_pos + '\t'+ ','.join(mappings), file=f)
 
-def update_logic_snpid_from_coord(bim_entries, snps, dbsnp, keep_multi=False, keep_unmapped_rsids=False):
+def map_using_coord_logic(bim_entries, snps, dbsnp, keep_multi=False, keep_unmapped_rsids=False):
 
     snps_to_update = []
     snps_to_delete = []
