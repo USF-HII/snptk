@@ -26,7 +26,8 @@ prep_dir() {
 cmp_file() {
   local file=$1; shift
 
-  if ! diff <(cat ${file} | sort) \
+  # TODO: Hack to cast alleles at end to tab instead of space separation
+  if ! diff <(cat ${file} | tr ' ' '\t' | sort) \
             <(set_ifs
               if [[ $# -lt 1 ]]; then
                 cat /dev/null
@@ -37,6 +38,14 @@ cmp_file() {
     echo file=$file
     exit 1
   fi
+}
+
+cmp_ped() {
+  cmp_file ${TEST}/output/test.ped "$@"
+}
+
+cmp_map() {
+  cmp_file ${TEST}/output/test.map "$@"
 }
 
 cmp_chr_update() {
@@ -131,8 +140,16 @@ run_snptk_snpid_from_coord_update() {
     --plink-prefix ${TEST}/input/test \
     --update-file ${TEST}/output/updated_snps.txt \
     --delete-file ${TEST}/output/deleted_snps.txt \
-    --out-name ${TEST}/output/
-    --output-prefix
+    --output-prefix ${TEST}/output \
+    --out-name test
+}
+
+bed_to_ped(){
+  ${PLINK} \
+    --bfile ${TEST}/output/test \
+    --recode \
+    --tab \
+    --out ${TEST}/output/test &>/dev/null
 }
 
 #-----------------------------------------------------------------------------------------------------
@@ -203,6 +220,8 @@ cmp_updated_snps
 # - Column 3: Genetic distance (morgans)
 # - Column 4: Base-pair position (bp units)
 
+# ped + map (non-binary) -> bed, bim, fam (binary)
+
 TEST=${TEMP}/snpid-from-coord-update
 
 prep_dir ${TEST}
@@ -215,9 +234,26 @@ plink_map \
   "3 rs123 0 4444" \
   "3 rs456 0 8888"
 
-plink_bfile
+plink_bfile # bed, bim, fam
 
 dbsnp \
   "789 3 4444 0"
 
 run_snptk_map_using_coord
+
+cmp_deleted_snps \
+  "rs456"
+
+cmp_updated_snps \
+  "rs123 rs789"
+
+run_snptk_snpid_from_coord_update &>/dev/null
+
+bed_to_ped
+
+cmp_ped \
+  "fid1 iid1 pid1 mid1 1 1 C A" \
+  "fid1 iid2 pid1 mid1 2 2 C A"
+
+cmp_map \
+  "3 rs789 0 4444"
