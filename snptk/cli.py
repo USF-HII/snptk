@@ -15,24 +15,24 @@ def main():
     # map-using-coord
     #-----------------------------------------------------------------------------------------------------
 
-    parser_map_using_coord = subparsers.add_parser('map-using-coord',
+    map_using_coord = subparsers.add_parser('map-using-coord',
                                                     help='Generate edit maps using genetic coordindates of bim entry')
 
-    parser_map_using_coord.set_defaults(func=snptk.app.map_using_coord)
+    map_using_coord.set_defaults(func=snptk.app.map_using_coord)
 
-    parser_map_using_coord.add_argument('bim')
+    map_using_coord.add_argument('bim')
 
-    parser_map_using_coord.add_argument('--bim-offset', type=int, default=0)
+    map_using_coord.add_argument('--bim-offset', type=int, default=0)
 
-    parser_map_using_coord.add_argument('-d', '--dbsnp')
+    map_using_coord.add_argument('-d', '--dbsnp')
 
-    parser_map_using_coord.add_argument('--keep-multi-snp-mappings', action="store_true")
+    map_using_coord.add_argument('--keep-multi-snp-mappings', action="store_true")
 
-    parser_map_using_coord.add_argument('--keep-unmapped-rsids', action="store_true")
+    map_using_coord.add_argument('--keep-unmapped-rsids', action="store_true")
 
-    parser_map_using_coord.add_argument('--skip-rs-ids', action="store_true")
+    map_using_coord.add_argument('--skip-rs-ids', action="store_true")
 
-    parser_map_using_coord.add_argument('-o', '--output-prefix')
+    map_using_coord.add_argument('-o', '--output-prefix')
 
     #-----------------------------------------------------------------------------------------------------
     # map-using-rs-id
