@@ -12,7 +12,7 @@ def test_data(path):
 
 UpdateLogicOutput = namedtuple("UpdateLogicOutput", ["snps_del", "snps_up", "coords_up", "chroms_up"])
 
-UpdateLogic_snpid_from_coord_Output = namedtuple("UpdateLogicOutput", ["snps_del", "snps_up", "multi_snps"])
+UpdateLogic_map_using_coord_Output = namedtuple("UpdateLogicOutput", ["snps_del", "snps_up", "multi_snps"])
 
 class TestSnpTkAppUpdateLogicUpdateSnpIdAndPosition(unittest.TestCase):
 
@@ -27,7 +27,7 @@ class TestSnpTkAppUpdateLogicUpdateSnpIdAndPosition(unittest.TestCase):
         expected = UpdateLogicOutput(
                 snps_del=[], snps_up=[('rs123', 'rs456')], coords_up=[], chroms_up=[])
 
-        self.assertEqual(snptk.app.update_logic_update_snpid_and_position(snp_map, dbsnp), expected)
+        self.assertEqual(snptk.app.map_using_rs_id_logic(snp_map, dbsnp), expected)
 
     def test_snp_up_chrom_up(self):
         snp_map = [('rs123', '6:123', 'rs456')]
@@ -36,7 +36,7 @@ class TestSnpTkAppUpdateLogicUpdateSnpIdAndPosition(unittest.TestCase):
         expected = UpdateLogicOutput(
                 snps_del=[], snps_up=[('rs123', 'rs456')], coords_up=[], chroms_up=[('rs456', '7')])
 
-        self.assertEqual(snptk.app.update_logic_update_snpid_and_position(snp_map, dbsnp), expected)
+        self.assertEqual(snptk.app.map_using_rs_id_logic(snp_map, dbsnp), expected)
 
     def test_no_merge_no_dbsnp(self):
         snp_map = [('rs123', '6:123', 'rs123')]
@@ -45,7 +45,7 @@ class TestSnpTkAppUpdateLogicUpdateSnpIdAndPosition(unittest.TestCase):
         expected = UpdateLogicOutput(
                 snps_del=['rs123'], snps_up=[], coords_up=[], chroms_up=[])
 
-        self.assertEqual(snptk.app.update_logic_update_snpid_and_position(snp_map, dbsnp), expected)
+        self.assertEqual(snptk.app.map_using_rs_id_logic(snp_map, dbsnp), expected)
 
     def test_no_merge_history_but_in_dbsnp(self):
         snp_map = [('rs123', '6:123', 'rs123')]
@@ -54,7 +54,7 @@ class TestSnpTkAppUpdateLogicUpdateSnpIdAndPosition(unittest.TestCase):
         expected = UpdateLogicOutput(
                 snps_del=[], snps_up=[], coords_up=[('rs123', '456')], chroms_up=[('rs123', '7')])
 
-        self.assertEqual(snptk.app.update_logic_update_snpid_and_position(snp_map, dbsnp), expected)
+        self.assertEqual(snptk.app.map_using_rs_id_logic(snp_map, dbsnp), expected)
 
     def test_snp_up_but_up_snp_already_present(self):
         snp_map = [('rs123', '6:123', 'rs456'),
@@ -66,7 +66,7 @@ class TestSnpTkAppUpdateLogicUpdateSnpIdAndPosition(unittest.TestCase):
         expected = UpdateLogicOutput(
                 snps_del=['rs123'], snps_up=[], coords_up=[], chroms_up=[])
 
-        self.assertEqual(snptk.app.update_logic_update_snpid_and_position(snp_map, dbsnp), expected)
+        self.assertEqual(snptk.app.map_using_rs_id_logic(snp_map, dbsnp), expected)
 
     def test_snp_merged_but_merged_was_already_present_and_update_position(self):
         snp_map = [('rs123', '6:123', 'rs456'),
@@ -78,7 +78,7 @@ class TestSnpTkAppUpdateLogicUpdateSnpIdAndPosition(unittest.TestCase):
         expected = UpdateLogicOutput(
                 snps_del=['rs123'], snps_up=[], coords_up=[('rs456', '1000')], chroms_up=[])
 
-        self.assertEqual(snptk.app.update_logic_update_snpid_and_position(snp_map, dbsnp), expected)
+        self.assertEqual(snptk.app.map_using_rs_id_logic(snp_map, dbsnp), expected)
 
 class TestSnpTkAppUpdateLogicSnpIdFromCoord(unittest.TestCase):
     def setUp(self):
@@ -106,10 +106,10 @@ class TestSnpTkAppUpdateLogicSnpIdFromCoord(unittest.TestCase):
         keep_multi = False
         keep_unmapped_rsids = False
 
-        expected = UpdateLogic_snpid_from_coord_Output(
+        expected = UpdateLogic_map_using_coord_Output(
                 snps_del=['rs123'], snps_up=[], multi_snps=[] )
 
-        self.assertEqual(snptk.app.update_logic_snpid_from_coord(self.bim_entries, snps, dbsnp, keep_multi, keep_unmapped_rsids), expected)
+        self.assertEqual(snptk.app.map_using_coord_logic(self.bim_entries, snps, dbsnp, keep_multi, keep_unmapped_rsids), expected)
 
     def test_not_in_dbsnp_keep_unmapped_rsids(self):
         snps = ['rs123']
@@ -117,10 +117,10 @@ class TestSnpTkAppUpdateLogicSnpIdFromCoord(unittest.TestCase):
         keep_multi = False
         keep_unmapped_rsids = True
 
-        expected = UpdateLogic_snpid_from_coord_Output(
+        expected = UpdateLogic_map_using_coord_Output(
                 snps_del=[], snps_up=[], multi_snps=[] )
 
-        self.assertEqual(snptk.app.update_logic_snpid_from_coord(self.bim_entries, snps, dbsnp, keep_multi, keep_unmapped_rsids), expected)
+        self.assertEqual(snptk.app.map_using_coord_logic(self.bim_entries, snps, dbsnp, keep_multi, keep_unmapped_rsids), expected)
 
     def test_update_snp(self):
         """
@@ -133,10 +133,10 @@ class TestSnpTkAppUpdateLogicSnpIdFromCoord(unittest.TestCase):
         keep_multi = False
         keep_unmapped_rsids = False
 
-        expected = UpdateLogic_snpid_from_coord_Output(
+        expected = UpdateLogic_map_using_coord_Output(
                 snps_del=[], snps_up=[('rs123', 'rs456')], multi_snps=[] )
 
-        self.assertEqual(snptk.app.update_logic_snpid_from_coord(self.bim_entries, snps, dbsnp, keep_multi, keep_unmapped_rsids), expected)
+        self.assertEqual(snptk.app.map_using_coord_logic(self.bim_entries, snps, dbsnp, keep_multi, keep_unmapped_rsids), expected)
 
     def test_no_update(self):
         snps = ['rs123']
@@ -144,10 +144,10 @@ class TestSnpTkAppUpdateLogicSnpIdFromCoord(unittest.TestCase):
         keep_multi = False
         keep_unmapped_rsids = False
 
-        expected = UpdateLogic_snpid_from_coord_Output(
+        expected = UpdateLogic_map_using_coord_Output(
                 snps_del=[], snps_up=[], multi_snps=[] )
 
-        self.assertEqual(snptk.app.update_logic_snpid_from_coord(self.bim_entries, snps, dbsnp, keep_multi, keep_unmapped_rsids), expected)
+        self.assertEqual(snptk.app.map_using_coord_logic(self.bim_entries, snps, dbsnp, keep_multi, keep_unmapped_rsids), expected)
 
     def test_multi_snp_unmapped_rsids_false(self):
         snps = ['rs123']
@@ -155,10 +155,10 @@ class TestSnpTkAppUpdateLogicSnpIdFromCoord(unittest.TestCase):
         keep_multi = False
         keep_unmapped_rsids = False
 
-        expected = UpdateLogic_snpid_from_coord_Output(
+        expected = UpdateLogic_map_using_coord_Output(
                 snps_del=['rs123'], snps_up=[], multi_snps=[] )
 
-        self.assertEqual(snptk.app.update_logic_snpid_from_coord(self.bim_entries, snps, dbsnp, keep_multi, keep_unmapped_rsids), expected)
+        self.assertEqual(snptk.app.map_using_coord_logic(self.bim_entries, snps, dbsnp, keep_multi, keep_unmapped_rsids), expected)
 
     def test_unmapped_rsids(self):
         snps = ['rs123']
@@ -166,10 +166,10 @@ class TestSnpTkAppUpdateLogicSnpIdFromCoord(unittest.TestCase):
         keep_multi = False
         keep_unmapped_rsids = True
 
-        expected = UpdateLogic_snpid_from_coord_Output(
+        expected = UpdateLogic_map_using_coord_Output(
                 snps_del=[], snps_up=[], multi_snps=[] )
 
-        self.assertEqual(snptk.app.update_logic_snpid_from_coord(self.bim_entries, snps, dbsnp, keep_multi, keep_unmapped_rsids), expected)
+        self.assertEqual(snptk.app.map_using_coord_logic(self.bim_entries, snps, dbsnp, keep_multi, keep_unmapped_rsids), expected)
 
     def test_keep_multi_no_update(self):
         snps = ['rs123']
@@ -177,10 +177,10 @@ class TestSnpTkAppUpdateLogicSnpIdFromCoord(unittest.TestCase):
         keep_multi = True
         keep_unmapped_rsids = False
 
-        expected = UpdateLogic_snpid_from_coord_Output(
+        expected = UpdateLogic_map_using_coord_Output(
                 snps_del=[], snps_up=[], multi_snps=[('6:123', ['rs123', 'rs456'])] )
 
-        self.assertEqual(snptk.app.update_logic_snpid_from_coord(self.bim_entries, snps, dbsnp, keep_multi, keep_unmapped_rsids), expected)
+        self.assertEqual(snptk.app.map_using_coord_logic(self.bim_entries, snps, dbsnp, keep_multi, keep_unmapped_rsids), expected)
 
     def test_keep_multi_update(self):
         snps = ['rs123']
@@ -188,10 +188,10 @@ class TestSnpTkAppUpdateLogicSnpIdFromCoord(unittest.TestCase):
         keep_multi = True
         keep_unmapped_rsids = False
 
-        expected = UpdateLogic_snpid_from_coord_Output(
+        expected = UpdateLogic_map_using_coord_Output(
                 snps_del=[], snps_up=[('rs123', 'rs456')], multi_snps=[('6:123', ['rs456', 'rs789'])] )
 
-        self.assertEqual(snptk.app.update_logic_snpid_from_coord(self.bim_entries, snps, dbsnp, keep_multi, keep_unmapped_rsids), expected)
+        self.assertEqual(snptk.app.map_using_coord_logic(self.bim_entries, snps, dbsnp, keep_multi, keep_unmapped_rsids), expected)
 
     def test_keep_multi_no_update_snp_already_in_bim(self):
         snps = ['rs123', 'rs456']
@@ -199,10 +199,10 @@ class TestSnpTkAppUpdateLogicSnpIdFromCoord(unittest.TestCase):
         keep_multi = True
         keep_unmapped_rsids = False
 
-        expected = UpdateLogic_snpid_from_coord_Output(
+        expected = UpdateLogic_map_using_coord_Output(
                 snps_del=[], snps_up=[], multi_snps=[('6:123', ['rs456', 'rs789'])] )
 
-        self.assertEqual(snptk.app.update_logic_snpid_from_coord(self.bim_entries, snps, dbsnp, keep_multi, keep_unmapped_rsids), expected)
+        self.assertEqual(snptk.app.map_using_coord_logic(self.bim_entries, snps, dbsnp, keep_multi, keep_unmapped_rsids), expected)
 
     def test_no_rs_keep_unmapped(self):
         snps = ['rs123']
@@ -210,9 +210,20 @@ class TestSnpTkAppUpdateLogicSnpIdFromCoord(unittest.TestCase):
         keep_multi = False
         keep_unmapped_rsids = True
 
-        expected = UpdateLogic_snpid_from_coord_Output(
+        expected = UpdateLogic_map_using_coord_Output(
                 snps_del=['123'], snps_up=[], multi_snps=[] )
 
-        self.assertEqual(snptk.app.update_logic_snpid_from_coord(self.bim_entries_no_rs, snps, dbsnp, keep_multi, keep_unmapped_rsids), expected)
+        self.assertEqual(snptk.app.map_using_coord_logic(self.bim_entries_no_rs, snps, dbsnp, keep_multi, keep_unmapped_rsids), expected)
 
+    def test_skip_rs_ids(self):
+        snps = ['rs123']
+        dbsnp = {'6:123' :  ['rs456']}
+        keep_multi = False
+        keep_unmapped_rsids = False
+        skip_rs_ids = True
+
+        expected = UpdateLogic_map_using_coord_Output(
+                snps_del=[], snps_up=[], multi_snps=[] )
+
+        self.assertEqual(snptk.app.map_using_coord_logic(self.bim_entries, snps, dbsnp, keep_multi, keep_unmapped_rsids, skip_rs_ids), expected)
 
