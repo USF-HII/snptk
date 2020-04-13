@@ -6,6 +6,8 @@ BASE=$(readlink -f $(dirname "$0")/..)
 ME=$(basename "$0")
 TEMP=${BASE}/tmp/${ME%.sh}
 
+PLINK=/shares/hii/sw/plink1.9/20190304/bin/plink
+
 set_ifs() { oldIFS=${IFS}; IFS=$'\n'; }
 
 unset_ifs() { IFS=${oldIFS}; }
@@ -73,6 +75,32 @@ dbsnp() {
   unset_ifs
 }
 
+plink_ped() {
+  set_ifs
+  for line in "$@"; do
+    echo ${line} | tr ' ' '\t'
+  done > ${TEST}/input/test.ped
+  unset_ifs
+}
+
+plink_map() {
+  set_ifs
+  for line in "$@"; do
+    echo ${line} | tr ' ' '\t'
+  done > ${TEST}/input/test.map
+  unset_ifs
+}
+
+plink_bfile() {
+  ${PLINK} \
+    --ped ${TEST}/input/test.ped \
+    --map ${TEST}/input/test.map \
+    --make-bed \
+    --out ${TEST}/input/test &>/dev/null
+
+    /bin/rm ${TEST}/input/test.{ped,map,log}
+}
+
 test_bim() {
   set_ifs
   for line in "$@"; do
@@ -96,7 +124,15 @@ run_snptk_map_using_rs_id() {
     --output-prefix=${TEST}/output/ \
     "$@" \
     ${TEST}/input/test.bim
+}
 
+run_snptk_snpid_from_coord_update() {
+  ${BASE}/bin/snptk snpid-from-coord-update \
+    --plink-prefix ${TEST}/input/test \
+    --update-file ${TEST}/output/updated_snps.txt \
+    --delete-file ${TEST}/output/deleted_snps.txt \
+    --out-name ${TEST}/output/
+    --output-prefix
 }
 
 #-----------------------------------------------------------------------------------------------------
@@ -148,3 +184,40 @@ cmp_coord_update \
 cmp_deleted_snps
 
 cmp_updated_snps
+
+#-----------------------------------------------------------------------------------------------------
+# snpid-from-coord-update
+#-----------------------------------------------------------------------------------------------------
+# PED file
+# - Column 1: Family ID (exclude with `--no-fid`)
+# - Column 2: Individual ID
+# - Column 3: Paternal ID (exclude with `--no-parents`)
+# - Column 4: Maternal ID (exclude with `--no-parents`)
+# - Column 5: Sex (1=male; 2=female; other=unknown) (exclude with `--no-sex`)
+# - Column 6: Phenotype (exclude with `--no-pheno`) 0 missing, 1 unaffected, 2 affected
+# - Column 7 and onwards: Genotypes (can be any character except 0 which is, by default, the missing genotype character.
+#
+# MAP file
+# - Column 1: chromosome (1-22, X, Y or 0 if unplaced)
+# - Column 2: rs# or snp identifier
+# - Column 3: Genetic distance (morgans)
+# - Column 4: Base-pair position (bp units)
+
+TEST=${TEMP}/snpid-from-coord-update
+
+prep_dir ${TEST}
+
+plink_ped \
+  "fid1 iid1 pid1 mid1 1 1 A C A A" \
+  "fid1 iid2 pid1 mid1 2 2 A C A C"
+
+plink_map \
+  "3 rs123 0 4444" \
+  "3 rs456 0 8888"
+
+plink_bfile
+
+dbsnp \
+  "789 3 4444 0"
+
+run_snptk_map_using_coord
