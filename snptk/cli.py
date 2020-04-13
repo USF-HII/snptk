@@ -30,6 +30,8 @@ def main():
 
     parser_map_using_coord.add_argument('--keep-unmapped-rsids', action="store_true")
 
+    parser_map_using_coord.add_argument('--skip-rs-ids', action="store_true")
+
     parser_map_using_coord.add_argument('-o', '--output-prefix')
 
     #-----------------------------------------------------------------------------------------------------

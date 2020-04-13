@@ -126,6 +126,7 @@ def map_using_coord(args):
 
     keep_multi = args['keep_multi_snp_mappings']
     keep_unmapped_rsids = args['keep_unmapped_rsids']
+    skip_rs_ids = args['skip_rs_ids']
 
     coordinates = set()
     snps = set()
@@ -138,7 +139,7 @@ def map_using_coord(args):
 
     dbsnp = snptk.core.execute_load(snptk.core.load_dbsnp_by_coordinate, dbsnp_fname, coordinates, merge_method='extend')
 
-    snps_to_delete, snps_to_update, multi_snps = map_using_coord_logic(bim_entries, snps, dbsnp, keep_multi, keep_unmapped_rsids)
+    snps_to_delete, snps_to_update, multi_snps = map_using_coord_logic(bim_entries, snps, dbsnp, keep_multi, keep_unmapped_rsids, skip_rs_ids)
 
     with open(join(output_prefix, 'deleted_snps.txt'), 'w') as f:
         for snp_id in snps_to_delete:
@@ -153,7 +154,7 @@ def map_using_coord(args):
             for chr_pos, mappings in multi_snps:
                 print(chr_pos + '\t'+ ','.join(mappings), file=f)
 
-def map_using_coord_logic(bim_entries, snps, dbsnp, keep_multi=False, keep_unmapped_rsids=False):
+def map_using_coord_logic(bim_entries, snps, dbsnp, keep_multi=False, keep_unmapped_rsids=False, skip_rs_ids=False):
 
     snps_to_update = []
     snps_to_delete = []
@@ -162,6 +163,9 @@ def map_using_coord_logic(bim_entries, snps, dbsnp, keep_multi=False, keep_unmap
     for entry in bim_entries:
         k = entry['chromosome'] + ':' + entry['position']
         snp = entry['snp_id']
+
+        if snp.startswith("rs") and skip_rs_ids:
+            continue
 
         if k in dbsnp:
             if len(dbsnp[k]) > 1:
