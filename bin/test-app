@@ -7,6 +7,7 @@ ME=$(basename "$0")
 TEMP=${BASE}/tmp/${ME%.sh}
 
 PLINK=/shares/hii/sw/plink1.9/20190304/bin/plink
+BCFTOOLS="/shares/hii/sw/singularity/latest/bin/singularity exec --bind /shares:/shares --bind /hii/work:/hii/work /shares/hii/images/bioinfo/htslib/latest.simg bcftools"
 
 set_ifs() { oldIFS=${IFS}; IFS=$'\n'; }
 
