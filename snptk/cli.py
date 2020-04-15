@@ -56,13 +56,19 @@ def main():
     # remove duplicates
     #-----------------------------------------------------------------------------------------------------
 
-    parser_remove_duplicates = subparsers.add_parser('remove-duplicates', help='Remove duplicate snps in plink binary files')
+    remove_duplicates = subparsers.add_parser('remove-duplicates', help='Remove duplicate snps in plink binary files')
 
-    parser_remove_duplicates.set_defaults(func=snptk.app.remove_duplicates)
+    remove_duplicates.set_defaults(func=snptk.app.remove_duplicates)
 
-    parser_remove_duplicates.add_argument('--plink-prefix')
+    remove_duplicates.add_argument('--plink', default="plink", help="Path to plink; assumes exe is in path otherwise")
 
-    parser_remove_duplicates.add_argument('-o', '--output-prefix')
+    remove_duplicates.add_argument('--bcftools', default="bcftools", help="Path to bcftools; assumes exe is in path otherwise")
+
+    remove_duplicates.add_argument('--dry-run', '-rn', action="store_true")
+
+    remove_duplicates.add_argument('--plink-prefix')
+
+    remove_duplicates.add_argument('-o', '--output-prefix')
 
     #-----------------------------------------------------------------------------------------------------
     # plink update snpid from coordniate
