@@ -204,39 +204,35 @@ def map_using_coord_logic(bim_entries, snps, dbsnp, keep_multi=False, keep_unmap
 
 def remove_duplicates(args):
 
+    plink = args['plink']
+    bcftools = args['bcftools']
+    dryrun = args['dry_run']
     plink_fname = args['plink_prefix']
     output_prefix = args['output_prefix']
 
     file_name=splitext(basename(plink_fname))[0]
 
-    # convert to vcf
-    command = f'plink --bfile {plink_fname} --recode vcf --out {output_prefix}/{file_name}'
-    subprocess.call(command, shell=True)
-    print("Finished converting to VCF")
+    commands = {
+        'bed_to_vcf' : f'{plink} --bfile {plink_fname} --recode vcf --out {output_prefix}/{file_name}',
+        'remove_dups' : f'{bcftools} norm --rm-dup all -o {output_prefix}/{file_name}_no_dups.vcf -O vcf {output_prefix}/{file_name}.vcf',
+        'vcf_to_bed' : f'{plink} --vcf {output_prefix}/{file_name}_no_dups.vcf --const-fid --make-bed --out {output_prefix}/{file_name}_no_dups',
+        'new_fam_ids' : f'cut -d" " -f1-2 {output_prefix}/{file_name}_no_dups.fam > {output_prefix}/new_fam_ids.txt',
+        'ori_fam_ids' : f'cut -d" " -f1-2 {plink_fname}.fam > {output_prefix}/ori_fam_ids.txt',
+        'new_to_old_map' : f'paste -d" " {output_prefix}/new_fam_ids.txt {output_prefix}/ori_fam_ids.txt > {output_prefix}/update_fam_ids.txt',
+        'update_fam_ids' : f'{plink} --bfile {output_prefix}/{file_name}_no_dups --update-ids {output_prefix}/update_fam_ids.txt --make-bed --out {output_prefix}/{file_name}_no_dups_final'
+        }
 
-    # remove dups using bcftools
-    command = f'bcftools norm --rm-dup all -o {output_prefix}/{file_name}_no_dups.vcf -O vcf {output_prefix}/{file_name}.vcf'
-    subprocess.call(command, shell=True)
-    print("Finished removing duplicate snps using Bcftools")
+    run(commands, dryrun)
+    print("***** Finished Removing Duplicates ******")
 
-    # convert to vcf to plink
-    command = f'plink --vcf {output_prefix}/{file_name}_no_dups.vcf --const-fid --make-bed --out {output_prefix}/{file_name}_no_dups'
-    subprocess.call(command, shell=True)
-    print("Finished converting VCF back to Plink")
+def run(commands, dryrun=False):
 
-    # set fam IDs back to original
-    command = f'cut -d" " -f1-2 {output_prefix}/{file_name}_no_dups.fam > {output_prefix}/new_fam_ids.txt'
-    command2 = f'cut -d" " -f1-2 {plink_fname}.fam > {output_prefix}/ori_fam_ids.txt'
-    command3 = f'paste -d" " {output_prefix}/new_fam_ids.txt {output_prefix}/ori_fam_ids.txt > {output_prefix}/update_fam_ids.txt'
-
-    subprocess.call(command, shell=True)
-    subprocess.call(command2, shell=True)
-    subprocess.call(command3, shell=True)
-
-    command = f'plink --bfile {output_prefix}/{file_name}_no_dups --update-ids {output_prefix}/update_fam_ids.txt --make-bed --out {output_prefix}/{file_name}_no_dups_final'
-    subprocess.call(command, shell=True)
-    print("Finished fixing Fam IDs")
-    print("***** COMPLETE ******")
+    for key, command in commands.items():
+        if dryrun:
+            print(f'{key} command: {command[0]}')
+        else:
+            subprocess.call(command[0], shell=True)
+            print(command[1])
 
 #-----------------------------------------------------------------------------------
 # snpid_from_coord_update
