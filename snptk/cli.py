@@ -64,7 +64,7 @@ def main():
 
     remove_duplicates.add_argument('--bcftools', default="bcftools", help="Path to bcftools; assumes exe is in path otherwise")
 
-    remove_duplicates.add_argument('--dry-run', '-rn', action="store_true")
+    remove_duplicates.add_argument('--dry-run', '-n', action="store_true")
 
     remove_duplicates.add_argument('--plink-prefix')
 

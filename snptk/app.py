@@ -1,8 +1,8 @@
 from os.path import join, basename, splitext
 
-import subprocess
 import snptk.core
 import snptk.util
+import subprocess
 
 from snptk.util import debug
 
@@ -219,20 +219,10 @@ def remove_duplicates(args):
         'new_fam_ids' : f'cut -d" " -f1-2 {output_prefix}/{file_name}_no_dups.fam > {output_prefix}/new_fam_ids.txt',
         'ori_fam_ids' : f'cut -d" " -f1-2 {plink_fname}.fam > {output_prefix}/ori_fam_ids.txt',
         'new_to_old_map' : f'paste -d" " {output_prefix}/new_fam_ids.txt {output_prefix}/ori_fam_ids.txt > {output_prefix}/update_fam_ids.txt',
-        'update_fam_ids' : f'{plink} --bfile {output_prefix}/{file_name}_no_dups --update-ids {output_prefix}/update_fam_ids.txt --make-bed --out {output_prefix}/{file_name}_no_dups_final'
+        'update_fam_ids' : f'{plink} --bfile {output_prefix}/{file_name}_no_dups --update-ids {output_prefix}/update_fam_ids.txt --make-bed --out {output_prefix}/{file_name}'
         }
 
-    run(commands, dryrun)
-    print("***** Finished Removing Duplicates ******")
-
-def run(commands, dryrun=False):
-
-    for key, command in commands.items():
-        if dryrun:
-            print(f'{key} command: {command[0]}')
-        else:
-            subprocess.call(command[0], shell=True)
-            print(command[1])
+    snptk.core.cmd(commands, dryrun)
 
 #-----------------------------------------------------------------------------------
 # snpid_from_coord_update

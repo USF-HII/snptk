@@ -3,6 +3,7 @@
 import gzip
 import sys
 import os
+import subprocess
 
 from concurrent.futures import ProcessPoolExecutor
 
@@ -192,4 +193,15 @@ def load_dbsnp_by_coordinate(fname, coordinates, offset=0):
                         debug('len(fields) < 4 and not AltOnly: ' + str(fields))
 
     return db
+
+def cmd(commands, dryrun=False):
+
+    for key, command in commands.items():
+        print("#" + "-" * 102, file=sys.stderr)
+        print(f"# {key}", file=sys.stderr)
+        print("#" + "-" * 102, file=sys.stderr)
+        print(command, file=sys.stderr)
+        print(file=sys.stderr)
+        if not dryrun:
+            subprocess.call(command, shell=True)
 
