@@ -41,6 +41,10 @@ cmp_file() {
   fi
 }
 
+cmp_bim() {
+  cmp_file ${TEST}/output/test.bim "$@"
+}
+
 cmp_ped() {
   cmp_file ${TEST}/output/test.ped "$@"
 }
@@ -105,6 +109,7 @@ plink_bfile() {
   ${PLINK} \
     --ped ${TEST}/input/test.ped \
     --map ${TEST}/input/test.map \
+    --keep-allele-order \
     --make-bed \
     --out ${TEST}/input/test &>/dev/null
 
@@ -151,6 +156,14 @@ bed_to_ped(){
     --recode \
     --tab \
     --out ${TEST}/output/test &>/dev/null
+}
+
+run_snptk_remove_duplicates() {
+    ${BASE}/bin/snptk remove-duplicates \
+        --plink "${PLINK}" \
+        --bcftools "${BCFTOOLS}" \
+        --plink-prefix ${TEST}/input/test \
+        --output-prefix ${TEST}/output
 }
 
 #-----------------------------------------------------------------------------------------------------
@@ -258,3 +271,28 @@ cmp_ped \
 
 cmp_map \
   "3 rs789 0 4444"
+
+#-----------------------------------------------------------------------------------------------------
+# remove-duplicates
+#-----------------------------------------------------------------------------------------------------
+
+TEST=${TEMP}/snptk-remove-duplicates
+
+prep_dir ${TEST}
+
+plink_ped \
+  "fid1 iid1 pid1 mid1 1 1 A C A A" \
+  "fid1 iid2 pid1 mid1 2 2 A C A C"
+
+plink_map \
+  "3 rs123 0 4444" \
+  "3 rs123 0 4444"
+
+plink_bfile # bed, bim, fam
+
+run_snptk_remove_duplicates &> /dev/null
+
+cmp_bim \
+  "3 rs123 0 4444 C A"
+
+
