@@ -50,6 +50,8 @@ def main():
 
     map_using_rs_id.add_argument('--bim-offset', type=int, default=0)
 
+    map_using_rs_id.add_argument('--include-file', default=None)
+
     map_using_rs_id.add_argument('-o', '--output-prefix')
 
     #-----------------------------------------------------------------------------------------------------

@@ -1,5 +1,6 @@
 from os.path import join, basename, splitext
 
+import sys
 import snptk.core
 import snptk.util
 import subprocess
@@ -15,7 +16,10 @@ def map_using_rs_id(args):
     dbsnp_fname = args['dbsnp']
     rs_merge_fname = args['rs_merge']
     bim_offset = args['bim_offset']
+    include_file = args['include_file']
     output_prefix = args['output_prefix']
+
+    unmappable_snps = snptk.core.load_include_file(include_file)
 
     rs_merge = snptk.core.execute_load(snptk.core.load_rs_merge, rs_merge_fname, merge_method='update')
 
@@ -43,7 +47,7 @@ def map_using_rs_id(args):
     # Generate edit instructions
     #-----------------------------------------------------------------------------------
 
-    snps_to_delete, snps_to_update, coords_to_update, chromosomes_to_update = map_using_rs_id_logic(snp_map, dbsnp)
+    snps_to_delete, snps_to_update, coords_to_update, chromosomes_to_update = map_using_rs_id_logic(snp_map, dbsnp, unmappable_snps)
 
     with open(join(output_prefix, 'deleted_snps.txt'), 'w') as f:
         for snp_id in snps_to_delete:
@@ -61,7 +65,7 @@ def map_using_rs_id(args):
         for snp_id, chromosome in chromosomes_to_update:
             print(snp_id + '\t' + chromosome, file=f)
 
-def map_using_rs_id_logic(snp_map, dbsnp):
+def map_using_rs_id_logic(snp_map, dbsnp, unmappable_snps):
 
     snps_to_delete = []
     snps_to_update = []
@@ -90,6 +94,11 @@ def map_using_rs_id_logic(snp_map, dbsnp):
                 if new_chromosome != original_chromosome:
                     chromosomes_to_update.append((snp_id_new, new_chromosome))
 
+            # snp_id is updated to snp_id_new but unable to update chromosome and position
+            elif snp_id_new in unmappable_snps:
+                snps_to_update.append((snp_id, snp_id_new))
+                debug(f'{snp_id} was updated to {snp_id_new} but cannot be updated by chr:position due to having multiple positions inside of GRCh37 VCF file')
+
             else:
                 snps_to_delete.append(snp_id)
 
@@ -106,6 +115,9 @@ def map_using_rs_id_logic(snp_map, dbsnp):
 
                 if new_chromosome != original_chromosome:
                     chromosomes_to_update.append((snp_id, new_chromosome))
+
+            elif snp_id in unmappable_snps:
+                debug(f'{snp_id} cannot be updated due to having multiple positions inside of GRCh37 VCF file')
 
             # if the snp isn't in dbsnp it has been deleted
             else:

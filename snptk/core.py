@@ -194,6 +194,17 @@ def load_dbsnp_by_coordinate(fname, coordinates, offset=0):
 
     return db
 
+def load_include_file(fname):
+
+    unmappable_snps = set()
+
+    if fname != None:
+        with gzip.open(fname, 'rt') as f:
+            for line in f:
+                unmappable_snps.add('rs' + line.strip())
+
+    return unmappable_snps
+
 def cmd(commands, dryrun=False):
 
     for key, command in commands.items():
