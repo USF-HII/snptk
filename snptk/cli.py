@@ -71,46 +71,17 @@ def main():
     remove_duplicates.add_argument('-o', '--output-prefix')
 
     #-----------------------------------------------------------------------------------------------------
-    # plink update snpid from coordniate
+    # update-from-map
     #-----------------------------------------------------------------------------------------------------
 
-    parser_snpid_from_coord_update = subparsers.add_parser('snpid-from-coord-update',
-                                                    help='Plink update using output from snptk snpid_from_coord')
+    update_from_map = subparsers.add_parser("update-from-map")
+    update_from_map.set_defaults(func=snptk.app.update_from_map)
 
-    parser_snpid_from_coord_update.set_defaults(func=snptk.app.snpid_from_coord_update)
-
-    parser_snpid_from_coord_update.add_argument('--plink-prefix')
-
-    parser_snpid_from_coord_update.add_argument('--update-file')
-
-    parser_snpid_from_coord_update.add_argument('--delete-file')
-
-    parser_snpid_from_coord_update.add_argument('--out-name')
-
-    parser_snpid_from_coord_update.add_argument('-o', '--output-prefix')
-
-    #-----------------------------------------------------------------------------------------------------
-    # plink update snpid and position
-    #-----------------------------------------------------------------------------------------------------
-
-    parser_snpid_and_position_update = subparsers.add_parser('snpid-and-position-update',
-                                                    help='Plink update using output from snptk snpid_and_position')
-
-    parser_snpid_and_position_update.set_defaults(func=snptk.app.snpid_and_position_update)
-
-    parser_snpid_and_position_update.add_argument('--plink-prefix')
-
-    parser_snpid_and_position_update.add_argument('--delete-file')
-
-    parser_snpid_and_position_update.add_argument('--update-file')
-
-    parser_snpid_and_position_update.add_argument('--coord-file')
-
-    parser_snpid_and_position_update.add_argument('--chr-file')
-
-    parser_snpid_and_position_update.add_argument('--out-name')
-
-    parser_snpid_and_position_update.add_argument('-o', '--output-prefix')
+    update_from_map.add_argument("--dry-run", "-n", action="store_true")
+    update_from_map.add_argument("--plink", default="plink")
+    update_from_map.add_argument("--map-dir", required=True)
+    update_from_map.add_argument("input_prefix")
+    update_from_map.add_argument("output_prefix")
 
     #-----------------------------------------------------------------------------------------------------
     # parse

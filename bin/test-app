@@ -166,6 +166,14 @@ run_snptk_remove_duplicates() {
         --output-prefix ${TEST}/output
 }
 
+run_snptk_update_from_map() {
+  ${BASE}/bin/snptk update-from-map \
+        --plink "${PLINK}" \
+        --map-dir ${TEST}/output \
+        ${TEST}/input/test \
+        ${TEST}/output/test
+}
+
 #-----------------------------------------------------------------------------------------------------
 # snptk-map-using-coord
 #-----------------------------------------------------------------------------------------------------
@@ -217,62 +225,6 @@ cmp_deleted_snps
 cmp_updated_snps
 
 #-----------------------------------------------------------------------------------------------------
-# snpid-from-coord-update
-#-----------------------------------------------------------------------------------------------------
-# PED file
-# - Column 1: Family ID (exclude with `--no-fid`)
-# - Column 2: Individual ID
-# - Column 3: Paternal ID (exclude with `--no-parents`)
-# - Column 4: Maternal ID (exclude with `--no-parents`)
-# - Column 5: Sex (1=male; 2=female; other=unknown) (exclude with `--no-sex`)
-# - Column 6: Phenotype (exclude with `--no-pheno`) 0 missing, 1 unaffected, 2 affected
-# - Column 7 and onwards: Genotypes (can be any character except 0 which is, by default, the missing genotype character.
-#
-# MAP file
-# - Column 1: chromosome (1-22, X, Y or 0 if unplaced)
-# - Column 2: rs# or snp identifier
-# - Column 3: Genetic distance (morgans)
-# - Column 4: Base-pair position (bp units)
-
-# ped + map (non-binary) -> bed, bim, fam (binary)
-
-TEST=${TEMP}/snpid-from-coord-update
-
-prep_dir ${TEST}
-
-plink_ped \
-  "fid1 iid1 pid1 mid1 1 1 A C A A" \
-  "fid1 iid2 pid1 mid1 2 2 A C A C"
-
-plink_map \
-  "3 rs123 0 4444" \
-  "3 rs456 0 8888"
-
-plink_bfile # bed, bim, fam
-
-dbsnp \
-  "789 3 4444 0"
-
-run_snptk_map_using_coord
-
-cmp_deleted_snps \
-  "rs456"
-
-cmp_updated_snps \
-  "rs123 rs789"
-
-run_snptk_snpid_from_coord_update &>/dev/null
-
-bed_to_ped
-
-cmp_ped \
-  "fid1 iid1 pid1 mid1 1 1 C A" \
-  "fid1 iid2 pid1 mid1 2 2 C A"
-
-cmp_map \
-  "3 rs789 0 4444"
-
-#-----------------------------------------------------------------------------------------------------
 # remove-duplicates
 #-----------------------------------------------------------------------------------------------------
 
@@ -295,4 +247,102 @@ run_snptk_remove_duplicates &> /dev/null
 cmp_bim \
   "3 rs123 0 4444 C A"
 
+#-----------------------------------------------------------------------------------------------------
+# update-from-map-using-coord
+#-----------------------------------------------------------------------------------------------------
 
+TEST=${TEMP}/update-from-map-using-coord
+
+prep_dir ${TEST}
+
+plink_ped \
+  "fid1 iid1 pid1 mid1 1 1 A C A A" \
+  "fid1 iid2 pid1 mid1 2 2 A C A C"
+
+plink_map \
+  "3 rs123 0 4444" \
+  "3 rs456 0 8888"
+
+plink_bfile # bed, bim, fam
+
+dbsnp \
+  "456 3 3444 0" \
+  "789 3 8888 0"
+
+run_snptk_map_using_coord
+
+cmp_deleted_snps \
+  "rs123"
+
+cmp_updated_snps \
+  "rs456 rs789"
+
+run_snptk_update_from_map &>/dev/null
+
+cmp_bim \
+  "3 rs789 0 8888 C A"
+
+#-----------------------------------------------------------------------------------------------------
+# update-from-map-using-rs-id
+#-----------------------------------------------------------------------------------------------------
+
+TEST=${TEMP}/update-from-map-using-rs-id
+
+prep_dir ${TEST}
+
+plink_ped \
+  "fid1 iid1 pid1 mid1 1 1 A C A A" \
+  "fid1 iid2 pid1 mid1 2 2 A C A C"
+
+plink_map \
+  "3 rs123 0 4444" \
+  "3 rs456 0 8888"
+
+plink_bfile # bed, bim, fam
+
+dbsnp \
+  "123 3 8888 0"
+
+rsmerge \
+  "1 2"
+
+run_snptk_map_using_rs_id
+
+cmp_chr_update
+
+cmp_coord_update \
+  "rs123 8888"
+
+cmp_deleted_snps \
+  "rs456"
+
+cmp_updated_snps
+
+run_snptk_update_from_map &>/dev/null
+
+cmp_bim \
+  "3 rs123 0 8888 C A"
+
+#-----------------------------------------------------------------------------------------------------
+# end
+#-----------------------------------------------------------------------------------------------------
+
+echo "> END" 1>&2
+
+#-----------------------------------------------------------------------------------------------------
+# PED file
+# - Column 1: Family ID (exclude with `--no-fid`)
+# - Column 2: Individual ID
+# - Column 3: Paternal ID (exclude with `--no-parents`)
+# - Column 4: Maternal ID (exclude with `--no-parents`)
+# - Column 5: Sex (1=male; 2=female; other=unknown) (exclude with `--no-sex`)
+# - Column 6: Phenotype (exclude with `--no-pheno`) 0 missing, 1 unaffected, 2 affected
+# - Column 7 and onwards: Genotypes (can be any character except 0 which is, by default, the missing genotype character.
+#
+# MAP file
+# - Column 1: chromosome (1-22, X, Y or 0 if unplaced)
+# - Column 2: rs# or snp identifier
+# - Column 3: Genetic distance (morgans)
+# - Column 4: Base-pair position (bp units)
+#
+# ped + map (non-binary) -> bed, bim, fam (binary)

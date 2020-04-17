@@ -1,3 +1,6 @@
+import os
+import sys
+
 from os.path import join, basename, splitext
 
 import snptk.core
@@ -224,64 +227,39 @@ def remove_duplicates(args):
 
     snptk.core.cmd(commands, dryrun)
 
-#-----------------------------------------------------------------------------------
-# snpid_from_coord_update
-#-----------------------------------------------------------------------------------
 
-def snpid_from_coord_update(args):
+def update_from_map(args):
+    plink, map_dir, input_prefix, output_prefix, dry_run = args["plink"], args["map_dir"], args["input_prefix"], args["output_prefix"], args["dry_run"]
 
-    plink_fname = args['plink_prefix']
-    update_fname = args['update_file']
-    delete_fname = args['delete_file']
-    out_name = args['out_name']
-    output_prefix = args['output_prefix']
+    map_using_rs_id = set(["deleted_snps.txt", "updated_snps.txt", "coord_update.txt", "chr_update.txt"])
+    map_using_coord = set(["deleted_snps.txt", "updated_snps.txt"])
 
-    file_name=splitext(basename(plink_fname))[0]
+    map_files = set(os.listdir(map_dir))
 
-    # exclude deleted snps
-    command = f'plink --bfile {plink_fname} --exclude {delete_fname} --make-bed --out {output_prefix}/{file_name}_deleted'
-    subprocess.call(command, shell=True)
-    print("Finished removing Deleted SNPs")
+    if map_using_rs_id.issubset(map_files):
+        commands = {
+            "Exclude Deleted SNPs":
+                f"{plink} --bfile {input_prefix} --exclude {map_dir}/deleted_snps.txt --make-bed --out {output_prefix}_deleted",
+            "Update SNP Ids":
+                f"{plink} --bfile {output_prefix}_deleted --update-name {map_dir}/updated_snps.txt --make-bed --out {output_prefix}_updated",
+            "Update Coordinates":
+                f"{plink} --bfile {output_prefix}_updated --update-map {map_dir}/coord_update.txt --make-bed --out {output_prefix}_coord_update",
+            "Update Chromosomes":
+                f"{plink} --bfile {output_prefix}_coord_update --update-chr {map_dir}/chr_update.txt --make-bed --out {output_prefix}"
+        }
 
-    # exclude deleted snps
-    command = f'plink --bfile {output_prefix}/{file_name}_deleted --update-name {update_fname} --make-bed --out {output_prefix}/{out_name}'
-    subprocess.call(command, shell=True)
-    print("Finished Updating SNPs")
-    print("***** COMPLETE ******")
+    elif map_using_coord.issubset(map_files):
+        commands = {
+            "Exclude Deleted SNPs":
+                f"{plink} --bfile {input_prefix} --exclude {map_dir}/deleted_snps.txt --make-bed --out {output_prefix}_deleted",
+            "Update SNP Ids":
+                f"{plink} --bfile {output_prefix}_deleted --update-name {map_dir}/updated_snps.txt --make-bed --out {output_prefix}"
+        }
 
-#-----------------------------------------------------------------------------------
-# snpid_and_position_update
-#-----------------------------------------------------------------------------------
+    else:
+        print(f"--map-dir '{map_dir}' does not contain the expected set of either " +
+               "(" + ", ".join(map_using_rs_id) + ") or (" + ", ".join(map_using_coord) + ")", file=sys.stderr)
 
-def snpid_and_position_update(args):
+        sys.exit(1)
 
-    plink_fname = args['plink_prefix']
-    update_fname = args['update_file']
-    delete_fname = args['delete_file']
-    coord_fname = args['coord_file']
-    chr_fname = args['chr_file']
-    out_name = args['out_name']
-    output_prefix = args['output_prefix']
-
-    file_name=splitext(basename(plink_fname))[0]
-
-    # exclude deleted snps
-    command = f'plink --bfile {plink_fname} --exclude {delete_fname} --make-bed --out {output_prefix}/{file_name}_deleted'
-    subprocess.call(command, shell=True)
-    print("Finished removing Deleted SNPs")
-
-    # update snps
-    command = f'plink --bfile {output_prefix}/{file_name}_deleted --update-name {update_fname} --make-bed --out {output_prefix}/{file_name}_updated'
-    subprocess.call(command, shell=True)
-    print("Finished Updating SNPs")
-
-    # update coordniates
-    command = f'plink --bfile {output_prefix}/{file_name}_updated --update-map {coord_fname} --make-bed --out {output_prefix}/{file_name}_coord_update'
-    subprocess.call(command, shell=True)
-    print("Finished Updating Coordniates")
-
-    # update chromosomes
-    command = f'plink --bfile {output_prefix}/{file_name}_coord_update --update-chr {chr_fname} --make-bed --out {output_prefix}/{out_name}'
-    subprocess.call(command, shell=True)
-    print("Finished Updating Chromosomes")
-    print("***** COMPLETE ******")
+    snptk.core.cmd(commands, dry_run)
