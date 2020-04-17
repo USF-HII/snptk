@@ -23,38 +23,42 @@ class TestSnpTkAppUpdateLogicUpdateSnpIdAndPosition(unittest.TestCase):
     def test_snp_up(self):
         snp_map = [('rs123', '6:123', 'rs456')]
         dbsnp = {'rs456': '6:123'}
+        unmappable_snps = set()
 
         expected = UpdateLogicOutput(
                 snps_del=[], snps_up=[('rs123', 'rs456')], coords_up=[], chroms_up=[])
 
-        self.assertEqual(snptk.app.map_using_rs_id_logic(snp_map, dbsnp), expected)
+        self.assertEqual(snptk.app.map_using_rs_id_logic(snp_map, dbsnp, unmappable_snps), expected)
 
     def test_snp_up_chrom_up(self):
         snp_map = [('rs123', '6:123', 'rs456')]
         dbsnp = {'rs456': '7:123'}
+        unmappable_snps = set()
 
         expected = UpdateLogicOutput(
                 snps_del=[], snps_up=[('rs123', 'rs456')], coords_up=[], chroms_up=[('rs456', '7')])
 
-        self.assertEqual(snptk.app.map_using_rs_id_logic(snp_map, dbsnp), expected)
+        self.assertEqual(snptk.app.map_using_rs_id_logic(snp_map, dbsnp, unmappable_snps), expected)
 
     def test_no_merge_no_dbsnp(self):
         snp_map = [('rs123', '6:123', 'rs123')]
         dbsnp = {}
+        unmappable_snps = set()
 
         expected = UpdateLogicOutput(
                 snps_del=['rs123'], snps_up=[], coords_up=[], chroms_up=[])
 
-        self.assertEqual(snptk.app.map_using_rs_id_logic(snp_map, dbsnp), expected)
+        self.assertEqual(snptk.app.map_using_rs_id_logic(snp_map, dbsnp, unmappable_snps), expected)
 
     def test_no_merge_history_but_in_dbsnp(self):
         snp_map = [('rs123', '6:123', 'rs123')]
         dbsnp = {'rs123': '7:456'}
+        unmappable_snps = set()
 
         expected = UpdateLogicOutput(
                 snps_del=[], snps_up=[], coords_up=[('rs123', '456')], chroms_up=[('rs123', '7')])
 
-        self.assertEqual(snptk.app.map_using_rs_id_logic(snp_map, dbsnp), expected)
+        self.assertEqual(snptk.app.map_using_rs_id_logic(snp_map, dbsnp, unmappable_snps), expected)
 
     def test_snp_up_but_up_snp_already_present(self):
         snp_map = [('rs123', '6:123', 'rs456'),
@@ -63,10 +67,12 @@ class TestSnpTkAppUpdateLogicUpdateSnpIdAndPosition(unittest.TestCase):
         dbsnp = {'rs123': '7:456',
                  'rs456': '6:123'}
 
+        unmappable_snps = set()
+
         expected = UpdateLogicOutput(
                 snps_del=['rs123'], snps_up=[], coords_up=[], chroms_up=[])
 
-        self.assertEqual(snptk.app.map_using_rs_id_logic(snp_map, dbsnp), expected)
+        self.assertEqual(snptk.app.map_using_rs_id_logic(snp_map, dbsnp, unmappable_snps), expected)
 
     def test_snp_merged_but_merged_was_already_present_and_update_position(self):
         snp_map = [('rs123', '6:123', 'rs456'),
@@ -75,10 +81,36 @@ class TestSnpTkAppUpdateLogicUpdateSnpIdAndPosition(unittest.TestCase):
         dbsnp = {'rs123': '7:456',
                  'rs456': '6:1000'}
 
+        unmappable_snps = set()
+
         expected = UpdateLogicOutput(
                 snps_del=['rs123'], snps_up=[], coords_up=[('rs456', '1000')], chroms_up=[])
 
-        self.assertEqual(snptk.app.map_using_rs_id_logic(snp_map, dbsnp), expected)
+        self.assertEqual(snptk.app.map_using_rs_id_logic(snp_map, dbsnp, unmappable_snps), expected)
+
+    def test_include_file_no_merge(self):
+        snp_map = [('rs456', '6:123', 'rs456')]
+
+        dbsnp = {'rs123': '7:456'}
+
+        unmappable_snps = {'rs456'}
+
+        expected = UpdateLogicOutput(
+                snps_del=[], snps_up=[], coords_up=[], chroms_up=[])
+
+        self.assertEqual(snptk.app.map_using_rs_id_logic(snp_map, dbsnp, unmappable_snps), expected)
+
+    def test_include_file_merge(self):
+        snp_map = [('rs456', '6:123', 'rs789')]
+
+        dbsnp = {'rs123': '7:456'}
+
+        unmappable_snps = {'rs789'}
+
+        expected = UpdateLogicOutput(
+                snps_del=[], snps_up=[('rs456', 'rs789')], coords_up=[], chroms_up=[])
+
+        self.assertEqual(snptk.app.map_using_rs_id_logic(snp_map, dbsnp, unmappable_snps), expected)
 
 class TestSnpTkAppUpdateLogicSnpIdFromCoord(unittest.TestCase):
     def setUp(self):
