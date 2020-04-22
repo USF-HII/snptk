@@ -19,6 +19,7 @@ Feature: SnpTk Map Using Coord
             |rs123|
         And updated_snps.txt should be empty
 
+
     Scenario: Update bim entry whose variant id has change
         Given test.bim with
             | chromosome  | variant_id | position | coordinate | allele_1 | allele_2 |

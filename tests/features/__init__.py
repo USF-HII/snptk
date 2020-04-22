@@ -82,18 +82,10 @@ def should_be(self, fname, description):
         assert_equal(tuple(self.table), tuple(lines))
 
 
-@step(r"test.bim with")
-def test_bim_with(self):
-    write_tsv("test.bim", self.table[1:])
+@step(r"(test.bim|dbsnp.gz|rsmerge.gz|include.gz) with")
+def test_bim_with(self, fname):
+    write_tsv(fname, self.table[1:])
 
-
-@step(r"dbsnp.gz with")
-def dbsnp_gz_with(self):
-    write_tsv("dbsnp.gz", self.table[1:])
-
-@step(r"rsmerge.gz with")
-def rsmerge_gz_with(self):
-    write_tsv("rsmerge.gz", self.table[1:])
 
 @step(r"(\w+\.txt) with\s*(\w+)?")
 def fname_txt_with(self, fname, description):
@@ -101,5 +93,3 @@ def fname_txt_with(self, fname, description):
         os.mknod(os.path.join(TEST_DIR, fname))
     else:
         write_tsv(fname, self.table)
-
-
