@@ -15,12 +15,15 @@ from snptk.util import debug
 #-----------------------------------------------------------------------------------
 
 def map_using_rs_id(args):
-    bim_fname = args['bim']
-    dbsnp_fname = args['dbsnp']
-    rs_merge_fname = args['rs_merge']
     bim_offset = args['bim_offset']
+    dbsnp_fname = args['dbsnp']
     include_file = args['include_file']
-    output_prefix = args['output_prefix']
+    rs_merge_fname = args['rs_merge']
+
+    bim_fname = args['input_bim']
+    output_map_dir = args['output_map_dir']
+
+    snptk.core.ensure_dir(output_map_dir, "output_map_dir")
 
     unmappable_snps = snptk.core.load_include_file(include_file)
 
@@ -52,19 +55,19 @@ def map_using_rs_id(args):
 
     snps_to_delete, snps_to_update, coords_to_update, chromosomes_to_update = map_using_rs_id_logic(snp_map, dbsnp, unmappable_snps)
 
-    with open(join(output_prefix, 'deleted_snps.txt'), 'w') as f:
+    with open(join(output_map_dir, 'deleted_snps.txt'), 'w') as f:
         for snp_id in snps_to_delete:
             print(snp_id, file=f)
 
-    with open(join(output_prefix, 'updated_snps.txt'), 'w') as f:
+    with open(join(output_map_dir, 'updated_snps.txt'), 'w') as f:
         for snp_id, snp_id_new in snps_to_update:
             print(snp_id + '\t' + snp_id_new, file=f)
 
-    with open(join(output_prefix, 'coord_update.txt'), 'w') as f:
+    with open(join(output_map_dir, 'coord_update.txt'), 'w') as f:
         for snp_id, coord_new in coords_to_update:
             print(snp_id + '\t' + coord_new, file=f)
 
-    with open(join(output_prefix, 'chr_update.txt'), 'w') as f:
+    with open(join(output_map_dir, 'chr_update.txt'), 'w') as f:
         for snp_id, chromosome in chromosomes_to_update:
             print(snp_id + '\t' + chromosome, file=f)
 
@@ -134,14 +137,16 @@ def map_using_rs_id_logic(snp_map, dbsnp, unmappable_snps):
 
 def map_using_coord(args):
 
-    bim_fname = args['bim']
+    bim_fname = args['input_bim']
     bim_offset = args['bim_offset']
     dbsnp_fname = args['dbsnp']
-    output_prefix = args['output_prefix']
+    output_map_dir = args['output_map_dir']
 
     keep_multi = args['keep_multi_snp_mappings']
     keep_unmapped_rsids = args['keep_unmapped_rsids']
     skip_rs_ids = args['skip_rs_ids']
+
+    snptk.core.ensure_dir(output_map_dir, "output_map_dir")
 
     coordinates = set()
     snps = set()
@@ -156,16 +161,16 @@ def map_using_coord(args):
 
     snps_to_delete, snps_to_update, multi_snps = map_using_coord_logic(bim_entries, snps, dbsnp, keep_multi, keep_unmapped_rsids, skip_rs_ids)
 
-    with open(join(output_prefix, 'deleted_snps.txt'), 'w') as f:
+    with open(join(output_map_dir, 'deleted_snps.txt'), 'w') as f:
         for snp_id in snps_to_delete:
             print(snp_id, file=f)
 
-    with open(join(output_prefix, 'updated_snps.txt'), 'w') as f:
+    with open(join(output_map_dir, 'updated_snps.txt'), 'w') as f:
         for snp_id, snp_id_new in snps_to_update:
             print(snp_id + '\t' + snp_id_new, file=f)
 
     if len(multi_snps) > 0:
-        with open(join(output_prefix, 'multi_snp_mappings.txt'), 'w') as f:
+        with open(join(output_map_dir, 'multi_snp_mappings.txt'), 'w') as f:
             for chr_pos, mappings in multi_snps:
                 print(chr_pos + '\t'+ ','.join(mappings), file=f)
 

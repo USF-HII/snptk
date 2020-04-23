@@ -20,8 +20,6 @@ def main():
 
     map_using_coord.set_defaults(func=snptk.app.map_using_coord)
 
-    map_using_coord.add_argument('bim')
-
     map_using_coord.add_argument('--bim-offset', type=int, default=0)
 
     map_using_coord.add_argument('-d', '--dbsnp')
@@ -32,7 +30,9 @@ def main():
 
     map_using_coord.add_argument('--skip-rs-ids', action="store_true")
 
-    map_using_coord.add_argument('-o', '--output-prefix')
+    map_using_coord.add_argument('input_bim')
+
+    map_using_coord.add_argument('output_map_dir')
 
     #-----------------------------------------------------------------------------------------------------
     # map-using-rs-id
@@ -42,8 +42,6 @@ def main():
 
     map_using_rs_id.set_defaults(func=snptk.app.map_using_rs_id)
 
-    map_using_rs_id.add_argument('bim')
-
     map_using_rs_id.add_argument('-d', '--dbsnp')
 
     map_using_rs_id.add_argument('-r', '--rs-merge')
@@ -52,7 +50,9 @@ def main():
 
     map_using_rs_id.add_argument('--include-file', default=None)
 
-    map_using_rs_id.add_argument('-o', '--output-prefix')
+    map_using_rs_id.add_argument('input_bim')
+
+    map_using_rs_id.add_argument('output_map_dir')
 
     #-----------------------------------------------------------------------------------------------------
     # remove duplicates

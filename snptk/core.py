@@ -216,3 +216,11 @@ def cmd(commands, dryrun=False):
         if not dryrun:
             subprocess.call(command, shell=True)
 
+def ensure_dir(path, name="directory"):
+    if os.path.exists(path):
+        if not os.path.isdir(path):
+            print(f"Error: {name} '{path}' exists but is not a directory. Exiting...", file=sys.stderr)
+            sys.exit(1)
+    else:
+        print(f"Creating {name} '{path}'", file=sys.stderr)
+        os.makedirs(path)

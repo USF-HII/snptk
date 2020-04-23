@@ -13,7 +13,7 @@ Feature: SnpTk Map Using Coord
             | variant_id | chromosome | coordinate |
             | 123        | 3          | 4444       |
 
-        When we run snptk map-using-coord --dbsnp=dbsnp.gz --output-prefix . test.bim
+        When we run snptk map-using-coord --dbsnp=dbsnp.gz test.bim .
 
         Then deleted_snps.txt should be
             |rs123|
@@ -28,7 +28,7 @@ Feature: SnpTk Map Using Coord
             | variant_id | chromosome | coordinate | orientation |
             | 456        | 1          | 1111       | 0           |
 
-        When we run snptk map-using-coord --dbsnp=dbsnp.gz --output-prefix . test.bim
+        When we run snptk map-using-coord --dbsnp=dbsnp.gz test.bim .
 
         Then updated_snps.txt should be
             | rs123 | rs456 |
@@ -43,7 +43,7 @@ Feature: SnpTk Map Using Coord
             | variant_id | chromosome | coordinate | orientation |
             | 456        | 1          | 2222       | 0           |
 
-        When we run snptk map-using-coord --dbsnp=dbsnp.gz --output-prefix . test.bim
+        When we run snptk map-using-coord --dbsnp=dbsnp.gz test.bim .
 
         Then updated_snps.txt should be empty
         And deleted_snps.txt should be
@@ -58,7 +58,7 @@ Feature: SnpTk Map Using Coord
             | variant_id | chromosome | coordinate | orientation |
             | 456        | 1          | 2222       | 0           |
 
-        When we run snptk map-using-coord --dbsnp=dbsnp.gz --keep-unmapped-rsids --output-prefix . test.bim
+        When we run snptk map-using-coord --dbsnp=dbsnp.gz --keep-unmapped-rsids test.bim .
 
         Then updated_snps.txt should be empty
         And deleted_snps.txt should be empty
@@ -73,7 +73,7 @@ Feature: SnpTk Map Using Coord
             | 123        | 1          | 1111       | 0           |
             | 456        | 1          | 1111       | 0           |
 
-        When we run snptk map-using-coord --dbsnp=dbsnp.gz --output-prefix . test.bim
+        When we run snptk map-using-coord --dbsnp=dbsnp.gz test.bim .
 
         Then updated_snps.txt should be empty
         And deleted_snps.txt should be
@@ -89,7 +89,7 @@ Feature: SnpTk Map Using Coord
             | 123        | 1          | 1111       | 0           |
             | 456        | 1          | 1111       | 0           |
 
-        When we run snptk map-using-coord --dbsnp=dbsnp.gz --keep-multi-snp-mappings --output-prefix . test.bim
+        When we run snptk map-using-coord --dbsnp=dbsnp.gz --keep-multi-snp-mappings test.bim .
 
         Then updated_snps.txt should be empty
         And deleted_snps.txt should be empty
@@ -104,7 +104,7 @@ Feature: SnpTk Map Using Coord
             | 456        | 1          | 1111       | 0           |
             | 789        | 1          | 1111       | 0           |
 
-        When we run snptk map-using-coord --dbsnp=dbsnp.gz --keep-multi-snp-mappings --output-prefix . test.bim
+        When we run snptk map-using-coord --dbsnp=dbsnp.gz --keep-multi-snp-mappings test.bim .
 
         Then updated_snps.txt should be
             | rs123 | rs456 |
@@ -121,7 +121,7 @@ Feature: SnpTk Map Using Coord
             | 456        | 1          | 1111       | 0           |
             | 789        | 1          | 1111       | 0           |
 
-        When we run snptk map-using-coord --dbsnp=dbsnp.gz --keep-multi-snp-mappings --output-prefix . test.bim
+        When we run snptk map-using-coord --dbsnp=dbsnp.gz --keep-multi-snp-mappings test.bim .
 
         Then updated_snps.txt should be empty
         And deleted_snps.txt should be empty
@@ -136,7 +136,7 @@ Feature: SnpTk Map Using Coord
             | 456        | 1          | 2222       | 0           |
             | 789        | 1          | 3333       | 0           |
 
-        When we run snptk map-using-coord --dbsnp=dbsnp.gz --output-prefix . test.bim
+        When we run snptk map-using-coord --dbsnp=dbsnp.gz test.bim .
 
         Then updated_snps.txt should be empty
         And deleted_snps.txt should be
@@ -151,7 +151,7 @@ Feature: SnpTk Map Using Coord
             | variant_id | chromosome | coordinate | orientation |
             | 123        | 1          | 2222       | 0           |
 
-        When we run snptk map-using-coord --dbsnp=dbsnp.gz --skip-rs-ids --output-prefix . test.bim
+        When we run snptk map-using-coord --dbsnp=dbsnp.gz --skip-rs-ids test.bim .
 
         Then updated_snps.txt should be empty
         And deleted_snps.txt should be empty
