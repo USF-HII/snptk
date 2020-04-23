@@ -15,19 +15,19 @@ from snptk.util import debug
 #-----------------------------------------------------------------------------------
 
 def map_using_rs_id(args):
-    bim_offset = args['bim_offset']
-    dbsnp_fname = args['dbsnp']
-    include_file = args['include_file']
-    rs_merge_fname = args['rs_merge']
+    bim_offset = args["bim_offset"]
+    dbsnp_fname = args["dbsnp"]
+    include_file = args["include_file"]
+    rs_merge_fname = args["rs_merge"]
 
-    bim_fname = args['input_bim']
-    output_map_dir = args['output_map_dir']
+    bim_fname = args["input_bim"]
+    output_map_dir = args["output_map_dir"]
 
     snptk.core.ensure_dir(output_map_dir, "output_map_dir")
 
     unmappable_snps = snptk.core.load_include_file(include_file)
 
-    rs_merge = snptk.core.execute_load(snptk.core.load_rs_merge, rs_merge_fname, merge_method='update')
+    rs_merge = snptk.core.execute_load(snptk.core.load_rs_merge, rs_merge_fname, merge_method="update")
 
     #-----------------------------------------------------------------------------------
     # Build a list of tuples with the original snp_id and updated_snp_id
@@ -35,9 +35,9 @@ def map_using_rs_id(args):
     snp_map = []
 
     for entry in snptk.core.load_bim(bim_fname, offset=bim_offset):
-        snp_id = entry['snp_id']
+        snp_id = entry["snp_id"]
         snp_id_new = snptk.core.update_snp_id(snp_id, rs_merge)
-        snp_map.append((snp_id, entry['chromosome'] + ':' + entry['position'], snp_id_new))
+        snp_map.append((snp_id, entry["chromosome"] + ":" + entry["position"], snp_id_new))
 
     #-----------------------------------------------------------------------------------
     # Load dbsnp by snp_id
@@ -47,7 +47,7 @@ def map_using_rs_id(args):
         snptk.core.load_dbsnp_by_snp_id,
         dbsnp_fname,
         set([snp for pair in snp_map for snp in pair]),
-        merge_method='update')
+        merge_method="update")
 
     #-----------------------------------------------------------------------------------
     # Generate edit instructions
@@ -55,21 +55,21 @@ def map_using_rs_id(args):
 
     snps_to_delete, snps_to_update, coords_to_update, chromosomes_to_update = map_using_rs_id_logic(snp_map, dbsnp, unmappable_snps)
 
-    with open(join(output_map_dir, 'deleted_snps.txt'), 'w') as f:
+    with open(join(output_map_dir, "deleted_snps.txt"), "w") as f:
         for snp_id in snps_to_delete:
             print(snp_id, file=f)
 
-    with open(join(output_map_dir, 'updated_snps.txt'), 'w') as f:
+    with open(join(output_map_dir, "updated_snps.txt"), "w") as f:
         for snp_id, snp_id_new in snps_to_update:
-            print(snp_id + '\t' + snp_id_new, file=f)
+            print(snp_id + "\t" + snp_id_new, file=f)
 
-    with open(join(output_map_dir, 'coord_update.txt'), 'w') as f:
+    with open(join(output_map_dir, "coord_update.txt"), "w") as f:
         for snp_id, coord_new in coords_to_update:
-            print(snp_id + '\t' + coord_new, file=f)
+            print(snp_id + "\t" + coord_new, file=f)
 
-    with open(join(output_map_dir, 'chr_update.txt'), 'w') as f:
+    with open(join(output_map_dir, "chr_update.txt"), "w") as f:
         for snp_id, chromosome in chromosomes_to_update:
-            print(snp_id + '\t' + chromosome, file=f)
+            print(snp_id + "\t" + chromosome, file=f)
 
 def map_using_rs_id_logic(snp_map, dbsnp, unmappable_snps):
 
@@ -89,10 +89,10 @@ def map_using_rs_id_logic(snp_map, dbsnp, unmappable_snps):
 
             elif snp_id_new in dbsnp:
                 snps_to_update.append((snp_id, snp_id_new))
-                debug(f'original_coord={original_coord} updated_coord={dbsnp[snp_id_new]}', level=2)
+                debug(f"original_coord={original_coord} updated_coord={dbsnp[snp_id_new]}", level=2)
 
-                new_chromosome, new_position = dbsnp[snp_id_new].split(':')
-                original_chromosome, original_position = original_coord.split(':')
+                new_chromosome, new_position = dbsnp[snp_id_new].split(":")
+                original_chromosome, original_position = original_coord.split(":")
 
                 if new_position != original_position:
                     coords_to_update.append((snp_id_new, new_position))
@@ -103,18 +103,18 @@ def map_using_rs_id_logic(snp_map, dbsnp, unmappable_snps):
             # snp_id is updated to snp_id_new but unable to update chromosome and position
             elif snp_id_new in unmappable_snps:
                 snps_to_update.append((snp_id, snp_id_new))
-                debug(f'{snp_id} was updated to {snp_id_new} but cannot be updated by chr:position due to having multiple positions inside of GRCh37 VCF file')
+                debug(f"{snp_id} was updated to {snp_id_new} but cannot be updated by chr:position due to having multiple positions inside of GRCh37 VCF file")
 
             else:
                 snps_to_delete.append(snp_id)
 
-        # if snp_id wasn't merged and is the same as snp_id_new (no change)
+        # if snp_id wasn"t merged and is the same as snp_id_new (no change)
         else:
             if snp_id in dbsnp:
-                debug(f'original_coord={original_coord} updated_coord={dbsnp[snp_id]}', level=2)
+                debug(f"original_coord={original_coord} updated_coord={dbsnp[snp_id]}", level=2)
 
-                new_chromosome, new_position = dbsnp[snp_id].split(':')
-                original_chromosome, original_position = original_coord.split(':')
+                new_chromosome, new_position = dbsnp[snp_id].split(":")
+                original_chromosome, original_position = original_coord.split(":")
 
                 if new_position != original_position:
                     coords_to_update.append((snp_id, new_position))
@@ -123,9 +123,9 @@ def map_using_rs_id_logic(snp_map, dbsnp, unmappable_snps):
                     chromosomes_to_update.append((snp_id, new_chromosome))
 
             elif snp_id in unmappable_snps:
-                debug(f'{snp_id} cannot be updated due to having multiple positions inside of GRCh37 VCF file')
+                debug(f"{snp_id} cannot be updated due to having multiple positions inside of GRCh37 VCF file")
 
-            # if the snp isn't in dbsnp it has been deleted
+            # if the snp isn"t in dbsnp it has been deleted
             else:
                 snps_to_delete.append(snp_id)
 
@@ -137,14 +137,14 @@ def map_using_rs_id_logic(snp_map, dbsnp, unmappable_snps):
 
 def map_using_coord(args):
 
-    bim_fname = args['input_bim']
-    bim_offset = args['bim_offset']
-    dbsnp_fname = args['dbsnp']
-    output_map_dir = args['output_map_dir']
+    bim_fname = args["input_bim"]
+    bim_offset = args["bim_offset"]
+    dbsnp_fname = args["dbsnp"]
+    output_map_dir = args["output_map_dir"]
 
-    keep_multi = args['keep_multi_snp_mappings']
-    keep_unmapped_rsids = args['keep_unmapped_rsids']
-    skip_rs_ids = args['skip_rs_ids']
+    keep_multi = args["keep_multi_snp_mappings"]
+    keep_unmapped_rsids = args["keep_unmapped_rsids"]
+    skip_rs_ids = args["skip_rs_ids"]
 
     snptk.core.ensure_dir(output_map_dir, "output_map_dir")
 
@@ -154,25 +154,25 @@ def map_using_coord(args):
     bim_entries = snptk.core.load_bim(bim_fname, offset=bim_offset)
 
     for entry in bim_entries:
-        snps.add(entry['snp_id'])
-        coordinates.add(entry['chromosome'] + ':' + entry['position'])
+        snps.add(entry["snp_id"])
+        coordinates.add(entry["chromosome"] + ":" + entry["position"])
 
-    dbsnp = snptk.core.execute_load(snptk.core.load_dbsnp_by_coordinate, dbsnp_fname, coordinates, merge_method='extend')
+    dbsnp = snptk.core.execute_load(snptk.core.load_dbsnp_by_coordinate, dbsnp_fname, coordinates, merge_method="extend")
 
     snps_to_delete, snps_to_update, multi_snps = map_using_coord_logic(bim_entries, snps, dbsnp, keep_multi, keep_unmapped_rsids, skip_rs_ids)
 
-    with open(join(output_map_dir, 'deleted_snps.txt'), 'w') as f:
+    with open(join(output_map_dir, "deleted_snps.txt"), "w") as f:
         for snp_id in snps_to_delete:
             print(snp_id, file=f)
 
-    with open(join(output_map_dir, 'updated_snps.txt'), 'w') as f:
+    with open(join(output_map_dir, "updated_snps.txt"), "w") as f:
         for snp_id, snp_id_new in snps_to_update:
-            print(snp_id + '\t' + snp_id_new, file=f)
+            print(snp_id + "\t" + snp_id_new, file=f)
 
     if len(multi_snps) > 0:
-        with open(join(output_map_dir, 'multi_snp_mappings.txt'), 'w') as f:
+        with open(join(output_map_dir, "multi_snp_mappings.txt"), "w") as f:
             for chr_pos, mappings in multi_snps:
-                print(chr_pos + '\t'+ ','.join(mappings), file=f)
+                print(chr_pos + "\t"+ ",".join(mappings), file=f)
 
 def map_using_coord_logic(bim_entries, snps, dbsnp, keep_multi=False, keep_unmapped_rsids=False, skip_rs_ids=False):
 
@@ -181,39 +181,39 @@ def map_using_coord_logic(bim_entries, snps, dbsnp, keep_multi=False, keep_unmap
     multi_snps = []
 
     for entry in bim_entries:
-        k = entry['chromosome'] + ':' + entry['position']
-        snp = entry['snp_id']
+        k = entry["chromosome"] + ":" + entry["position"]
+        snp = entry["snp_id"]
 
         if snp.startswith("rs") and skip_rs_ids:
             continue
 
         if k in dbsnp:
             if len(dbsnp[k]) > 1:
-                debug(f'Has more than one snp_id dbsnp[{k}] = {str(dbsnp[k])}')
+                debug(f"Has more than one snp_id dbsnp[{k}] = {str(dbsnp[k])}")
                 if keep_multi:
                     multi_snps.append((k, dbsnp[k]))
 
                     # this prevents rs123 being updated to rs123 (No change)
                     # this also checks to see if snp already in bim so duplicate
-                    # snps aren't included twice
+                    # snps aren"t included twice
                     if dbsnp[k][0] != snp and dbsnp[k][0] not in snps:
                         snps_to_update.append((snp, dbsnp[k][0]))
                     else:
                         continue
                 else:
-                    if keep_unmapped_rsids and snp.startswith('rs'):
+                    if keep_unmapped_rsids and snp.startswith("rs"):
                         continue
                     snps_to_delete.append(snp)
             else:
                 if dbsnp[k][0] != snp:
-                    debug(f'Rewrote snp_id {snp} to {dbsnp[k][0]} for position {k}')
+                    debug(f"Rewrote snp_id {snp} to {dbsnp[k][0]} for position {k}")
                     snps_to_update.append((snp, dbsnp[k][0]))
                     snp = dbsnp[k][0]
 
         else:
-            if keep_unmapped_rsids and snp.startswith('rs'):
+            if keep_unmapped_rsids and snp.startswith("rs"):
                 continue
-            debug('NO_MATCH: ' + '\t'.join(entry.values()))
+            debug("NO_MATCH: " + "\t".join(entry.values()))
             snps_to_delete.append(snp)
 
     return snps_to_delete, snps_to_update, multi_snps
@@ -224,22 +224,22 @@ def map_using_coord_logic(bim_entries, snps, dbsnp, keep_multi=False, keep_unmap
 
 def remove_duplicates(args):
 
-    plink = args['plink']
-    bcftools = args['bcftools']
-    dryrun = args['dry_run']
-    plink_fname = args['plink_prefix']
-    output_prefix = args['output_prefix']
+    plink = args["plink"]
+    bcftools = args["bcftools"]
+    dryrun = args["dry_run"]
+    plink_fname = args["plink_prefix"]
+    output_prefix = args["output_prefix"]
 
     file_name=splitext(basename(plink_fname))[0]
 
     commands = {
-        'bed_to_vcf' : f'{plink} --bfile {plink_fname} --recode vcf --out {output_prefix}/{file_name}',
-        'remove_dups' : f'{bcftools} norm --rm-dup all -o {output_prefix}/{file_name}_no_dups.vcf -O vcf {output_prefix}/{file_name}.vcf',
-        'vcf_to_bed' : f'{plink} --vcf {output_prefix}/{file_name}_no_dups.vcf --const-fid --make-bed --out {output_prefix}/{file_name}_no_dups',
-        'new_fam_ids' : f'cut -d" " -f1-2 {output_prefix}/{file_name}_no_dups.fam > {output_prefix}/new_fam_ids.txt',
-        'ori_fam_ids' : f'cut -d" " -f1-2 {plink_fname}.fam > {output_prefix}/ori_fam_ids.txt',
-        'new_to_old_map' : f'paste -d" " {output_prefix}/new_fam_ids.txt {output_prefix}/ori_fam_ids.txt > {output_prefix}/update_fam_ids.txt',
-        'update_fam_ids' : f'{plink} --bfile {output_prefix}/{file_name}_no_dups --update-ids {output_prefix}/update_fam_ids.txt --make-bed --out {output_prefix}/{file_name}'
+        "bed_to_vcf" : f"{plink} --bfile {plink_fname} --recode vcf --out {output_prefix}/{file_name}",
+        "remove_dups" : f"{bcftools} norm --rm-dup all -o {output_prefix}/{file_name}_no_dups.vcf -O vcf {output_prefix}/{file_name}.vcf",
+        "vcf_to_bed" : f"{plink} --vcf {output_prefix}/{file_name}_no_dups.vcf --const-fid --make-bed --out {output_prefix}/{file_name}_no_dups",
+        "new_fam_ids" : f"cut -d" " -f1-2 {output_prefix}/{file_name}_no_dups.fam > {output_prefix}/new_fam_ids.txt",
+        "ori_fam_ids" : f"cut -d" " -f1-2 {plink_fname}.fam > {output_prefix}/ori_fam_ids.txt",
+        "new_to_old_map" : f"paste -d" " {output_prefix}/new_fam_ids.txt {output_prefix}/ori_fam_ids.txt > {output_prefix}/update_fam_ids.txt",
+        "update_fam_ids" : f"{plink} --bfile {output_prefix}/{file_name}_no_dups --update-ids {output_prefix}/update_fam_ids.txt --make-bed --out {output_prefix}/{file_name}"
         }
 
     snptk.core.cmd(commands, dryrun)
