@@ -9,7 +9,7 @@ Feature: SnpTk Update From Map
            | rs123       | rs888  |
        And deleted_snps.txt with nothing
 
-       When we run snptk update-from-map --map-dir . test final
+       When we run snptk update-from-map . test final
 
        Then final.bim should be
            |1            | rs888      | 0        | 1111       | C | A |
@@ -28,7 +28,7 @@ Feature: SnpTk Update From Map
            | rs888      | 9999   |
        And chr_update.txt with nothing
 
-       When we run snptk update-from-map --map-dir . test final
+       When we run snptk update-from-map . test final
 
        Then final.bim should be
            |1            | rs888      | 0        | 9999       | C | A |

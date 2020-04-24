@@ -5,7 +5,7 @@ Feature: SnpTk Remove Duplicates
            | chromosome  | variant_id | position | coordinate |
            | 3           | rs123      | 0        | 1111       |
            | 3           | rs123      | 0        | 1111       |
-       When we run snptk remove-duplicates --plink-prefix test --output-prefix .
+       When we run snptk remove-duplicates test .
 
        Then test_no_dups.bim should be
            |3            | rs123      | 0        | 1111       | C | A |

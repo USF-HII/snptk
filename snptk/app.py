@@ -13,7 +13,7 @@ def map_using_rs_id(args):
     bim_offset = args["bim_offset"]
     dbsnp_fname = args["dbsnp"]
     include_file = args["include_file"]
-    rs_merge_fname = args["rs_merge"]
+    rs_merge_fname = args["rsmerge"]
 
     bim_fname = args["input_bim"]
     output_map_dir = args["output_map_dir"]
@@ -124,8 +124,8 @@ def map_using_coord(args):
     dbsnp_fname = args["dbsnp"]
     output_map_dir = args["output_map_dir"]
 
-    keep_multi = args["keep_multi_snp_mappings"]
-    keep_unmapped_rsids = args["keep_unmapped_rsids"]
+    keep_multi = args["keep_multi"]
+    keep_unmapped_rsids = args["keep_unmapped_rs_ids"]
     skip_rs_ids = args["skip_rs_ids"]
 
     snptk.core.ensure_dir(output_map_dir, "output_map_dir")
@@ -152,7 +152,7 @@ def map_using_coord(args):
             print(snp_id + "\t" + snp_id_new, file=f)
 
     if len(multi_snps) > 0:
-        with open(join(output_map_dir, "multi_snp_mappings.txt"), "w") as f:
+        with open(join(output_map_dir, "multi.txt"), "w") as f:
             for chr_pos, mappings in multi_snps:
                 print(chr_pos + "\t" + ",".join(mappings), file=f)
 
@@ -203,17 +203,18 @@ def remove_duplicates(args):
     plink = args["plink"]
     bcftools = args["bcftools"]
     dryrun = args["dry_run"]
-    plink_fname = args["plink_prefix"]
+
+    input_prefix = args["input_prefix"]
     output_prefix = args["output_prefix"]
 
-    file_name=splitext(basename(plink_fname))[0]
+    file_name = splitext(basename(input_prefix))[0]
 
     commands = {
-        "bed_to_vcf" : f"{plink} --bfile {plink_fname} --recode vcf --out {output_prefix}/{file_name}",
+        "bed_to_vcf" : f"{plink} --bfile {input_prefix} --recode vcf --out {output_prefix}/{file_name}",
         "remove_dups" : f"{bcftools} norm --rm-dup all -o {output_prefix}/{file_name}_no_dups.vcf -O vcf {output_prefix}/{file_name}.vcf",
         "vcf_to_bed" : f"{plink} --vcf {output_prefix}/{file_name}_no_dups.vcf --const-fid --make-bed --out {output_prefix}/{file_name}_no_dups",
         "new_fam_ids" : f"cut -d" " -f1-2 {output_prefix}/{file_name}_no_dups.fam > {output_prefix}/new_fam_ids.txt",
-        "ori_fam_ids" : f"cut -d" " -f1-2 {plink_fname}.fam > {output_prefix}/ori_fam_ids.txt",
+        "ori_fam_ids" : f"cut -d" " -f1-2 {input_prefix}.fam > {output_prefix}/ori_fam_ids.txt",
         "new_to_old_map" : f"paste -d" " {output_prefix}/new_fam_ids.txt {output_prefix}/ori_fam_ids.txt > {output_prefix}/update_fam_ids.txt",
         "update_fam_ids" : f"{plink} --bfile {output_prefix}/{file_name}_no_dups --update-ids {output_prefix}/update_fam_ids.txt --make-bed --out {output_prefix}/{file_name}"
         }

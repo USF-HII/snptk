@@ -24,7 +24,7 @@ Feature: SnpTk Map Using RS Id
             | old  | new  |
             | 9999 | 1111 |
 
-        When we run snptk map-using-rs-id --rs-merge=rsmerge.gz --dbsnp=dbsnp.gz test.bim .
+        When we run snptk map-using-rs-id --rsmerge=rsmerge.gz --dbsnp=dbsnp.gz test.bim .
 
         Then updated_snps.txt should be empty
         And deleted_snps.txt should be
@@ -44,7 +44,7 @@ Feature: SnpTk Map Using RS Id
             | old  | new |
             | 123  | 456 |
 
-        When we run snptk map-using-rs-id --rs-merge=rsmerge.gz --dbsnp=dbsnp.gz test.bim .
+        When we run snptk map-using-rs-id --rsmerge=rsmerge.gz --dbsnp=dbsnp.gz test.bim .
 
         Then updated_snps.txt should be
             | rs123 | rs456 |
@@ -64,7 +64,7 @@ Feature: SnpTk Map Using RS Id
             | old  | new |
             | 123  | 456 |
 
-        When we run snptk map-using-rs-id --rs-merge=rsmerge.gz --dbsnp=dbsnp.gz test.bim .
+        When we run snptk map-using-rs-id --rsmerge=rsmerge.gz --dbsnp=dbsnp.gz test.bim .
 
         Then updated_snps.txt should be
             | rs123 | rs456 |
@@ -91,7 +91,7 @@ Feature: SnpTk Map Using RS Id
             | old  | new |
             | 123  | 456 |
 
-        When we run snptk map-using-rs-id --rs-merge=rsmerge.gz --dbsnp=dbsnp.gz test.bim .
+        When we run snptk map-using-rs-id --rsmerge=rsmerge.gz --dbsnp=dbsnp.gz test.bim .
 
         Then updated_snps.txt should be empty
         And deleted_snps.txt should be
@@ -113,7 +113,7 @@ Feature: SnpTk Map Using RS Id
             | old  | new |
             | 123  | 456 |
 
-        When we run snptk map-using-rs-id --rs-merge=rsmerge.gz --dbsnp=dbsnp.gz test.bim .
+        When we run snptk map-using-rs-id --rsmerge=rsmerge.gz --dbsnp=dbsnp.gz test.bim .
 
         Then updated_snps.txt should be empty
         And deleted_snps.txt should be
@@ -139,7 +139,7 @@ Feature: SnpTk Map Using RS Id
             | variant_id |
             | 123        |
 
-        When we run snptk map-using-rs-id --rs-merge=rsmerge.gz --dbsnp=dbsnp.gz --include-file=include.gz test.bim .
+        When we run snptk map-using-rs-id --rsmerge=rsmerge.gz --dbsnp=dbsnp.gz --include-file=include.gz test.bim .
 
         Then updated_snps.txt should be empty
         And deleted_snps.txt should be empty
@@ -161,7 +161,7 @@ Feature: SnpTk Map Using RS Id
             | variant_id  |
             | 789 |
 
-        When we run snptk map-using-rs-id --rs-merge=rsmerge.gz --dbsnp=dbsnp.gz --include-file=include.gz test.bim .
+        When we run snptk map-using-rs-id --rsmerge=rsmerge.gz --dbsnp=dbsnp.gz --include-file=include.gz test.bim .
 
         Then updated_snps.txt should be
             | rs456  | rs789 |

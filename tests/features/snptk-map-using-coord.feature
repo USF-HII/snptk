@@ -50,7 +50,7 @@ Feature: SnpTk Map Using Coord
             | rs123 |
 
 
-    Scenario: Keep bim entry not found in dbsnp when --keep-unampped-rsids
+    Scenario: Keep bim entry not found in dbsnp when --keep-unmapped-rs-ids
         Given test.bim with
             | chromosome  | variant_id | position | coordinate | allele_1 | allele_2 |
             | 1           | rs123      | 0        | 1111       | A        | C        |
@@ -58,7 +58,7 @@ Feature: SnpTk Map Using Coord
             | variant_id | chromosome | coordinate | orientation |
             | 456        | 1          | 2222       | 0           |
 
-        When we run snptk map-using-coord --dbsnp=dbsnp.gz --keep-unmapped-rsids test.bim .
+        When we run snptk map-using-coord --dbsnp=dbsnp.gz --keep-unmapped-rs-ids test.bim .
 
         Then updated_snps.txt should be empty
         And deleted_snps.txt should be empty
@@ -80,7 +80,7 @@ Feature: SnpTk Map Using Coord
             | rs123 |
 
 
-    Scenario: Keep bim entry that has mutiple chromosome and coornidate mappings when --keep-multi-snp-mappings
+    Scenario: Keep bim entry that has mutiple chromosome and coornidate mappings when --keep-multi
         Given test.bim with
             | chromosome  | variant_id | position | coordinate | allele_1 | allele_2 |
             | 1           | rs123      | 0        | 1111       | A        | C        |
@@ -89,13 +89,13 @@ Feature: SnpTk Map Using Coord
             | 123        | 1          | 1111       | 0           |
             | 456        | 1          | 1111       | 0           |
 
-        When we run snptk map-using-coord --dbsnp=dbsnp.gz --keep-multi-snp-mappings test.bim .
+        When we run snptk map-using-coord --dbsnp=dbsnp.gz --keep-multi test.bim .
 
         Then updated_snps.txt should be empty
         And deleted_snps.txt should be empty
 
 
-    Scenario: Update bim entry that has mutiple chromosome and coornidate mappings when --keep-multi-snp-mappings
+    Scenario: Update bim entry that has mutiple chromosome and coornidate mappings when --keep-multi
         Given test.bim with
             | chromosome  | variant_id | position | coordinate | allele_1 | allele_2 |
             | 1           | rs123      | 0        | 1111       | A        | C        |
@@ -104,14 +104,14 @@ Feature: SnpTk Map Using Coord
             | 456        | 1          | 1111       | 0           |
             | 789        | 1          | 1111       | 0           |
 
-        When we run snptk map-using-coord --dbsnp=dbsnp.gz --keep-multi-snp-mappings test.bim .
+        When we run snptk map-using-coord --dbsnp=dbsnp.gz --keep-multi test.bim .
 
         Then updated_snps.txt should be
             | rs123 | rs456 |
         And deleted_snps.txt should be empty
 
 
-    Scenario: No change in bim entry that has mutiple chromosome and coornidate mappings when --keep-multi-snp-mappings but already present in bim
+    Scenario: No change in bim entry that has mutiple chromosome and coornidate mappings when --keep-multi but already present in bim
         Given test.bim with
             | chromosome  | variant_id | position | coordinate | allele_1 | allele_2 |
             | 1           | rs123      | 0        | 1111       | A        | C        |
@@ -121,7 +121,7 @@ Feature: SnpTk Map Using Coord
             | 456        | 1          | 1111       | 0           |
             | 789        | 1          | 1111       | 0           |
 
-        When we run snptk map-using-coord --dbsnp=dbsnp.gz --keep-multi-snp-mappings test.bim .
+        When we run snptk map-using-coord --dbsnp=dbsnp.gz --keep-multi test.bim .
 
         Then updated_snps.txt should be empty
         And deleted_snps.txt should be empty
