@@ -3,16 +3,11 @@ import sys
 
 from os.path import join, basename, splitext
 
-import sys
 import snptk.core
 import snptk.util
 import subprocess
 
 from snptk.util import debug
-
-#-----------------------------------------------------------------------------------
-# map_using_rs_id
-#-----------------------------------------------------------------------------------
 
 def map_using_rs_id(args):
     bim_offset = args["bim_offset"]
@@ -29,9 +24,7 @@ def map_using_rs_id(args):
 
     rs_merge = snptk.core.execute_load(snptk.core.load_rs_merge, rs_merge_fname, merge_method="update")
 
-    #-----------------------------------------------------------------------------------
     # Build a list of tuples with the original snp_id and updated_snp_id
-    #-----------------------------------------------------------------------------------
     snp_map = []
 
     for entry in snptk.core.load_bim(bim_fname, offset=bim_offset):
@@ -39,20 +32,14 @@ def map_using_rs_id(args):
         snp_id_new = snptk.core.update_snp_id(snp_id, rs_merge)
         snp_map.append((snp_id, entry["chromosome"] + ":" + entry["position"], snp_id_new))
 
-    #-----------------------------------------------------------------------------------
     # Load dbsnp by snp_id
-    #-----------------------------------------------------------------------------------
-
     dbsnp = snptk.core.execute_load(
         snptk.core.load_dbsnp_by_snp_id,
         dbsnp_fname,
         set([snp for pair in snp_map for snp in pair]),
         merge_method="update")
 
-    #-----------------------------------------------------------------------------------
     # Generate edit instructions
-    #-----------------------------------------------------------------------------------
-
     snps_to_delete, snps_to_update, coords_to_update, chromosomes_to_update = map_using_rs_id_logic(snp_map, dbsnp, unmappable_snps)
 
     with open(join(output_map_dir, "deleted_snps.txt"), "w") as f:
@@ -71,15 +58,14 @@ def map_using_rs_id(args):
         for snp_id, chromosome in chromosomes_to_update:
             print(snp_id + "\t" + chromosome, file=f)
 
-def map_using_rs_id_logic(snp_map, dbsnp, unmappable_snps):
 
+def map_using_rs_id_logic(snp_map, dbsnp, unmappable_snps):
     snps_to_delete = []
     snps_to_update = []
     coords_to_update = []
     chromosomes_to_update = []
 
     for snp_id, original_coord, snp_id_new in snp_map:
-
         # If the snp has been updated (merged)
         if snp_id_new != snp_id:
 
@@ -100,7 +86,7 @@ def map_using_rs_id_logic(snp_map, dbsnp, unmappable_snps):
                 if new_chromosome != original_chromosome:
                     chromosomes_to_update.append((snp_id_new, new_chromosome))
 
-            # snp_id is updated to snp_id_new but unable to update chromosome and position
+            # If snp_id is updated to snp_id_new but unable to update chromosome and position
             elif snp_id_new in unmappable_snps:
                 snps_to_update.append((snp_id, snp_id_new))
                 debug(f"{snp_id} was updated to {snp_id_new} but cannot be updated by chr:position due to having multiple positions inside of GRCh37 VCF file")
@@ -108,7 +94,7 @@ def map_using_rs_id_logic(snp_map, dbsnp, unmappable_snps):
             else:
                 snps_to_delete.append(snp_id)
 
-        # if snp_id wasn"t merged and is the same as snp_id_new (no change)
+        # If snp_id was not merged and is the same as snp_id_new (no change)
         else:
             if snp_id in dbsnp:
                 debug(f"original_coord={original_coord} updated_coord={dbsnp[snp_id]}", level=2)
@@ -125,18 +111,14 @@ def map_using_rs_id_logic(snp_map, dbsnp, unmappable_snps):
             elif snp_id in unmappable_snps:
                 debug(f"{snp_id} cannot be updated due to having multiple positions inside of GRCh37 VCF file")
 
-            # if the snp isn"t in dbsnp it has been deleted
+            # If snp_id is not in dbsnp it has been deleted
             else:
                 snps_to_delete.append(snp_id)
 
     return snps_to_delete, snps_to_update, coords_to_update, chromosomes_to_update
 
-#-----------------------------------------------------------------------------------
-# map_using_coord
-#-----------------------------------------------------------------------------------
 
 def map_using_coord(args):
-
     bim_fname = args["input_bim"]
     bim_offset = args["bim_offset"]
     dbsnp_fname = args["dbsnp"]
@@ -172,10 +154,10 @@ def map_using_coord(args):
     if len(multi_snps) > 0:
         with open(join(output_map_dir, "multi_snp_mappings.txt"), "w") as f:
             for chr_pos, mappings in multi_snps:
-                print(chr_pos + "\t"+ ",".join(mappings), file=f)
+                print(chr_pos + "\t" + ",".join(mappings), file=f)
+
 
 def map_using_coord_logic(bim_entries, snps, dbsnp, keep_multi=False, keep_unmapped_rsids=False, skip_rs_ids=False):
-
     snps_to_update = []
     snps_to_delete = []
     multi_snps = []
@@ -193,9 +175,8 @@ def map_using_coord_logic(bim_entries, snps, dbsnp, keep_multi=False, keep_unmap
                 if keep_multi:
                     multi_snps.append((k, dbsnp[k]))
 
-                    # this prevents rs123 being updated to rs123 (No change)
-                    # this also checks to see if snp already in bim so duplicate
-                    # snps aren"t included twice
+                    # This prevents rs123 being updated to rs123 (No change)
+                    # This also checks to see if snp already in bim so duplicate snps are not included twice
                     if dbsnp[k][0] != snp and dbsnp[k][0] not in snps:
                         snps_to_update.append((snp, dbsnp[k][0]))
                     else:
@@ -209,7 +190,6 @@ def map_using_coord_logic(bim_entries, snps, dbsnp, keep_multi=False, keep_unmap
                     debug(f"Rewrote snp_id {snp} to {dbsnp[k][0]} for position {k}")
                     snps_to_update.append((snp, dbsnp[k][0]))
                     snp = dbsnp[k][0]
-
         else:
             if keep_unmapped_rsids and snp.startswith("rs"):
                 continue
@@ -218,12 +198,8 @@ def map_using_coord_logic(bim_entries, snps, dbsnp, keep_multi=False, keep_unmap
 
     return snps_to_delete, snps_to_update, multi_snps
 
-#-----------------------------------------------------------------------------------
-# Remove Duplicates
-#-----------------------------------------------------------------------------------
 
 def remove_duplicates(args):
-
     plink = args["plink"]
     bcftools = args["bcftools"]
     dryrun = args["dry_run"]

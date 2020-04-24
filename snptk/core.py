@@ -75,8 +75,8 @@ def update_snp_id(snp_id, rs_merge):
 
     return "rs" + snp_id
 
-def load_rs_merge(fname):
 
+def load_rs_merge(fname):
     rs_merge = {}
 
     debug(f"Loading rs merge file '{fname}'...")
@@ -90,6 +90,7 @@ def load_rs_merge(fname):
     debug(f"Complete loading rs merge file '{fname}'...")
 
     return rs_merge
+
 
 def load_bim(fname, offset=0):
     """
@@ -116,6 +117,7 @@ def load_bim(fname, offset=0):
 
     return entries
 
+
 def load_dbsnp_by_snp_id(fname, snp_ids, offset=0):
     """
     Read in NCBI dbSNP and return subset of entries keyed by SNP Id. E.g.:
@@ -137,13 +139,12 @@ def load_dbsnp_by_snp_id(fname, snp_ids, offset=0):
 
             fields_len = len(fields)
 
-            # do we need this? YES
             if fields_len < 3 or fields[2] == "":
                 continue
 
             snp_id = "rs" + fields[0]
 
-            # add back in Alt Only if statement
+            # Add back in Alt Only if statement
             if snp_id in snp_ids:
                 chromosome = plink_map[fields[1]]
                 position = str(int(fields[2]) + offset)
@@ -152,6 +153,7 @@ def load_dbsnp_by_snp_id(fname, snp_ids, offset=0):
     debug(f"Completed loading dbSNP file '{fname}'...")
 
     return db
+
 
 def load_dbsnp_by_coordinate(fname, coordinates, offset=0):
     """
@@ -194,8 +196,8 @@ def load_dbsnp_by_coordinate(fname, coordinates, offset=0):
 
     return db
 
-def load_include_file(fname):
 
+def load_include_file(fname):
     unmappable_snps = set()
 
     if fname != None:
@@ -205,8 +207,8 @@ def load_include_file(fname):
 
     return unmappable_snps
 
-def cmd(commands, dryrun=False):
 
+def cmd(commands, dryrun=False):
     for key, command in commands.items():
         print("#" + "-" * 102, file=sys.stderr)
         print(f"# {key}", file=sys.stderr)
@@ -215,6 +217,7 @@ def cmd(commands, dryrun=False):
         print(file=sys.stderr)
         if not dryrun:
             subprocess.call(command, shell=True)
+
 
 def ensure_dir(path, name="directory"):
     if os.path.exists(path):
