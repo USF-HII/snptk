@@ -1,21 +1,22 @@
-# snptk
+# SNPTk - SNP Toolkit
 
-Update [Plink](https://www.cog-genomics.org/plink2)
-[BIM](https://www.cog-genomics.org/plink/1.9/formats#bim) files and
-BIM,
-[BED](https://www.cog-genomics.org/plink/1.9/formats#bed),
-[FAM](https://www.cog-genomics.org/plink/1.9/formats#fam)
-filesets utilizing [NCBI dbSNP](https://www.ncbi.nlm.nih.gov/snp/) data files.
+The SNP Toolkit (SNPTk) analyzes and updates [Plink](https://www.cog-genomics.org/plink2)
+[GWAS](https://en.wikipedia.org/wiki/Genome-wide_association_study) files.
 
-## Concepts
+## Table of Contents
 
-- NCBI dbSNP SNPChrPosOnRef file
-- NCBI dbSNP RsMergeArch file
-- Reference SNP Id (RS Id)
-- Variant ID
+- [Usage](#Usage)
+  - [map-using-coord](#map-using-coord)
+  - [map-using-rs-id](#map-using-rs-id)
+  - [remove-duplicates](#remove-duplicates)
+  - [update-from-map](#update-from-map)
+- [Plink Update Files](#plink-update-files)
+- [Concepts](#Concepts)
+  - [dbSNP](#dbSNP)
+  - [refSNP](#RefSNP)
+  - [SNPChrPosOnRef](#SNPChrPosOnRef)
 
-
-## Usage and Subcommands
+## Usage
 
 ```
 snptk <subcommand> [--help] [--version] [options...]
@@ -23,19 +24,27 @@ snptk <subcommand> [--help] [--version] [options...]
 Subcommands:
 
 map-using-coord      Generate Plink update files by chromosome/coordinate of BIM entry
-map-using-rs-id      Generate Plink update files by Reference SNP (RS) Id of BIM entry
+map-using-rs-id      Generate Plink update files by Reference SNP (RS) ID of BIM entry
 remove-duplicates    Remove duplicate snps from Plink BIM,BED,FAM fileset
 update-from-map      Update Plink BIM,BED,FAM fileset using output from map-using-coord or map-using-rs-id
 ```
 
-### map-using-coord
+### Subcommands
+
+#### map-using-coord
 
 Generate Plink update files by chromosome/coordinate of BIM entry.
 
 ```
-Usage: snptk map-using-coord [--help] [--bim-offset BIM_OFFSET] [--keep-multi] [--keep-unmapped-rs-ids] [--skip-rs-ids]
-                             --dbsnp DBSNP
-                             input_bim output_map_dir
+usage: snptk map-using-coord
+         [--help]
+         [--bim-offset BIM_OFFSET]
+         [--keep-multi]
+         [--keep-unmapped-rs-ids]
+         [--skip-rs-ids]
+         --dbsnp DBSNP
+         input_bim
+         output_map_dir
 
 positional arguments:
 input_bim
@@ -44,37 +53,19 @@ output_map_dir
 optional arguments:
 --help, -h               Show this help message and exit
 --bim-offset BIM_OFFSET  Add BIM_OFFSET to each BIM entry coordinate
---keep-multi             If coordinate maps to multiple RS Ids, write out Chrom Coord RSId,RSId,... into multi.txt
+--keep-multi             If coordinate maps to multiple RS IDs, write out Chrom Coord RSID,RSID,... into multi.txt
 --keep-unmapped-rs-ids   If entry starts with rs and is not in dbsnp, keep it anyways
 --skip-rs-ids            Do not update/delete any entry which starts with rs
 --dbsnp DBSNP, -d DBSNP  NCBI dbSNP SNPChrPosOnRef file or directory with split-files
 ```
 
-The subcommand will will generate 2 Plink update files:
-- `<output_map_dir>/deleted_snps.txt`
-- `<output_map_dir>/updated_snps.txt`
+The subcommand will will generate update files under `output_map_dir` which will be created if it does not exist:
+- `deleted_snps.txt` - contains entries in the form `<variant_id>`
+- `updated_snps.txt` - contains entries in the form `<variant_id><TAB><new_rs_id>`
 
-The file `deleted_snps.txt` contains variant ids to remove that did not have a matching chromosome/coordinate
-in the NCBI dbSNP SNPChrPosOnRef file.
+See: [Plink Update Files](#plink-update-files) for how to apply these using Plink.
 
-The file `updated_snps.txt` is a tab-separated file containing `old variant id`, `new rs id` pairs
-based on matching chromosome/coordinate in the NCBI dbSNP SNPChrPosOnRef file.
-
-These files are used by the `plink --make-bed` command to create an updated copy of a `BIM,BED,FAM` fileset.
-
-The operations are expected to be run in order, with `deleted_snps.txt` applied first followed by `updated_snps.txt`.
-
-To update `old.bim, old.bed, old.fam` to `new.bim, new.bed, new.fam` using `deleted_snps.txt`:
-```
-plink --make-bed --exclude deleted_snps.txt --bfile old --out new
-```
-
-To update `old.bim, old.bed, old.fam` to `new.bim, new.bed, new.fam` using `updated_snps.txt`:
-```
-plink --make-bed --update-name updated_snps.txt --bfile old --out new
-```
-
-There are several options which modify behavior of the `map-using-coord` subcommand:
+There are several options which modify behavior of the `map-using-coord` subcommand.
 
 Normally, if the chromosome/coordinate map to more than one entry in the NCBI dbSNP SNPChrPosOnRef file, the
 variant id is added to `deleted_snps.txt`. If `--keep-multi` is specified, we use the first entry
@@ -83,4 +74,165 @@ that maps and write out all matching entries to the file `multi.txt` in the form
 If `--keep-unmapped-rs-ids` is specified, if the variant id starts with the string `rs`, do not add it to `deleted_snps.txt` if
 its chromosome/position does not map to an entry in SNPChrPosOnRef.
 
-If `--skip-rs-ids` is specified, do not add any variant id that starts with the string `rs` to either `deleted_snps.txt` or `updated_snps.txt'.
+If `--skip-rs-ids` is specified, do not add any variant id that starts with the string `rs` to either `deleted_snps.txt` or `updated_snps.txt`.
+
+#### map-using-rs-id
+
+```
+usage: snptk map-using-rs-id
+         [--help]
+         [--bim-offset BIM_OFFSET]
+         [--include-file INCLUDE_FILE]
+         --dbsnp DBSNP
+         --rsmerge RSMERGE
+         input_bim
+         output_map_dir
+
+positional arguments:
+  input_bim
+  output_map_dir
+
+optional arguments:
+  --help, -h                     Show this help message and exit
+  --bim-offset BIM_OFFSET        Add BIM_OFFSET to each BIM entry coordinate
+  --include-file INCLUDE_FILE    Do not remove variant ids listed in this file
+  --dbsnp DBSNP, -d DBSNP        NCBI dbSNP SNPChrPosOnRef file or directory with split-files
+  --rsmerge RSMERGE, -r RSMERGE  NCBI RsMergeArch file or directory with split-files
+```
+
+The subcommand will will generate update files under `output_map_dir` which will be created if it does not exist:
+- `deleted_snps.txt` - contains entries in the form `<variant_id>`
+- `updated_snps.txt` - contains entries in the form `<variant_id><TAB><new_rs_id>`
+- `coord_update.txt` - contains entries in the form `<variant_id><TAB><new_coordinate>`
+- `chr_update.txt` - contains entries in thhe form `<variant_id><TAB><new_chromosome>`
+
+See: [Plink Update Files](#plink-update-files) for how to apply these using Plink.
+
+Normally variant ids that do not map to SNPChrPosOnRef are added to the list of variant ids to be deleted.
+If the option `--include-file INCLUDE_FILE` is specified, variant ids in `INCLUDE_FILE` that are not
+in SNPChrPosOnRef (before or after merging) are not added to the list to be deleted.
+
+#### remove-duplicates
+
+```
+usage: snptk remove-duplicates
+         [--help]
+         [--plink PLINK]
+         [--bcftools BCFTOOLS]
+         [--dry-run]
+         input_prefix
+         output_prefix
+
+positional arguments:
+  input_prefix         Input path prefix shared by Plink BIM,BED,FAM files
+  output_prefix        Output path prefix to write out Plink BIM,BED,FAM files
+
+optional arguments:
+  --help, -h           Show this help message and exit
+  --plink PLINK        Path to plink command
+  --bcftools BCFTOOLS  Path to bcftools command
+  --dry-run, -n        Print the commands that would be executed, but do not execute them
+```
+
+#### update-from-map
+
+```
+usage: snptk update-from-map
+         [--help]
+         [--dry-run]
+         [--plink PLINK]
+         map_dir
+         input_prefix
+         output_prefix
+
+positional arguments:
+  map_dir        Directory containing update files from map-using-coord/map-using-rs-id
+  input_prefix   Input path prefix shared by Plink BIM,BED,FAM files
+  output_prefix  Output path prefix to write out Plink BIM,BED,FAM files
+
+optional arguments:
+  --help, -h     Show this help message and exit
+  --dry-run, -n  Print the commands that would be executed, but do not execute them
+  --plink PLINK  Path to plink command
+```
+
+## Plink Update Files
+
+The subcommands `map-using-coord` and `map-using-rs-id` generate a set of update files which are used by Plink to
+change a `BIM,BED,BAM` fileset.
+
+The subcommand `map-using-coord` generates `deleted_snps.txt` and `updated_snps.txt`.
+
+The subcommand `map-using-rs-id` generates `deleted_snps.txt`, `updated_snps.txt`, `coord_update.txt`, and `chr_update.txt`.
+
+These files are expected to be applied in the order listed above. This is because in some circumstances an entry may be
+deleted or updated first, only for that entry or a later entry to be updated again in a following step.
+
+The subcommand `update-using-map` will read a directory (`--map-dir`) with the update files and run plink commands
+on a `BIM,BED,BAM` fileset. You can also run the subcommand with the `--dry-run` option and use the commands it
+would run in your own script.
+
+Each update file is intended to be used by the `plink --make-bed` function.
+
+Here are example commands to update `old.bim, old.bed, old.fam` to `new.bim, new.bed, new.fam` for `map-using-coord`:
+```
+plink --make-bed --exclude deleted_snps.txt --bfile old --out new.deleted
+plink --make-bed --update-name updated_snps.txt --bfile new.deleted --out new
+```
+
+To update `old.bim, old.bed, old.fam` to `new.bim, new.bed, new.fam` using `updated_snps.txt`:
+```
+plink --make-bed --exclude deleted_snps.txt --bfile old --out new.deleted
+plink --make-bed --update-name updated_snps.txt --bfile new.deleted --out new.updated_snps
+plink --make-bed --update-name coord_update.txt --bfile new.updated_snps --out new.coord_update
+plink --make-bed --update-name chr_update.txt --bfile new.coord_update --out new
+```
+
+## Concepts
+
+### dbSNP
+
+The [NCBI](https://www.ncbi.nlm.nih.gov/snp/) [dbSNP](https://www.ncbi.nlm.nih.gov/snp/) is a public-domain archive or a broad collection of simple genetic polymorphisms.
+
+### RefSNP
+
+A RefSNP (Reference SNP) is a number prefixed with `rs` (e.g. `rs123`) which is "a locus accession for a variant type assigned by dbSNP. The RefSNP catalog is a non-redundant collection of submitted variants which were clustered, integrated and annotated. RefSNP number is the stable accession regardless of the differences in genomic assemblies."
+
+### SNPChrPosOnRef
+
+SNPChrPosOnRef is a dump of the NCBI dbSNP. This was a flat file up to Build 151 (e.g. `b151_SNPChrPosOnRef_108.bcp.gz`)
+with the following tab-separated format (from: <https://www.ncbi.nlm.nih.gov/SNP/snp_db_table_description.cgi?t=SNPChrPosOnRef>):
+- `snp_id` - RefSNP (e.g. `123`). Note the `rs` is not present on this database dump
+- `chr` -  Chromosome (e.g. `X`)
+- `pos` - The 0 based chromosome position of uniquely mapped snp
+- `orien` - SNP to chromosome orientation. 0 - same orientation (or same strand), 1 - opposite strand
+- `neighbor_snp_list` - Internal use
+- `isPAR` - The SNP is in Pseudoautosomal Region (PAR) region when isPAR value is `y`
+
+As of Build 152 the information once held in SNPChrPosOnRef is now contained in a much richer JSON format.
+
+#### GRCh38 JSON Files
+
+The latest JSON files for GRCh38 are found at <https://ftp.ncbi.nih.gov/snp/latest_release/JSON/>.
+
+Specific builds of these JSON files are found under <https://ftp.ncbi.nih.gov/snp/archive/> (e.g. for Build 153
+you would find the files at <https://ftp.ncbi.nih.gov/snp/archive/b153/JSON/>).
+
+We can create a SNPChrPosOnRef file using the [bin/snptk-parse-json.py](bin/snptk-parse-json.py) tool found in this repository.
+
+The following example shows how to build a SNPChrPosOnRef file from GRCh38 Build 153 using bash:
+```
+temp=tmp/SNPChrPosOnRef/GRCh38/b153
+
+mkdir -p ${temp}
+
+chromosomes=$(echo {1..22} X Y MT)
+
+for chr in ${chromosomes}; do
+  curl https://ftp.ncbi.nih.gov/snp/archive/b153/JSON/refsnp-chr${chr}.json.bz2 > ${temp}/${chr}.json.bz2
+
+  bin/snptk-parse-json.py --method dbsnp --outfile ${temp}/${chr}.tsv ${temp}/${chr}.json.bz2
+done
+
+cat $(for chr in ${chromosomes}; do echo ${temp}/${chr}.tsv.gz; done) > ${temp}/b153_SNPChrPosOnRef.bcp.gz
+```
