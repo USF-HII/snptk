@@ -144,11 +144,13 @@ def load_dbsnp_by_snp_id(fname, snp_ids, offset=0):
 
             snp_id = "rs" + fields[0]
 
-            # Add back in Alt Only if statement
             if snp_id in snp_ids:
-                chromosome = plink_map[fields[1]]
-                position = str(int(fields[2]) + offset)
-                db[snp_id] = chromosome + ":" + position
+                if fields[1] == 'AltOnly':
+                    db[snp_id] = ['AltOnly']
+                else:
+                    chromosome = plink_map[fields[1]]
+                    position = str(int(fields[2]) + offset)
+                    db[snp_id] = chromosome + ':' + position
 
     debug(f"Completed loading dbSNP file '{fname}'...")
 
