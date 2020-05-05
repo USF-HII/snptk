@@ -213,9 +213,9 @@ def remove_duplicates(args):
         "bed_to_vcf" : f"{plink} --bfile {input_prefix} --recode vcf --out {output_prefix}/{file_name}",
         "remove_dups" : f"{bcftools} norm --rm-dup all -o {output_prefix}/{file_name}_no_dups.vcf -O vcf {output_prefix}/{file_name}.vcf",
         "vcf_to_bed" : f"{plink} --vcf {output_prefix}/{file_name}_no_dups.vcf --const-fid --make-bed --out {output_prefix}/{file_name}_no_dups",
-        "new_fam_ids" : f"cut -d" " -f1-2 {output_prefix}/{file_name}_no_dups.fam > {output_prefix}/new_fam_ids.txt",
-        "ori_fam_ids" : f"cut -d" " -f1-2 {input_prefix}.fam > {output_prefix}/ori_fam_ids.txt",
-        "new_to_old_map" : f"paste -d" " {output_prefix}/new_fam_ids.txt {output_prefix}/ori_fam_ids.txt > {output_prefix}/update_fam_ids.txt",
+        "new_fam_ids" : f"cut -d' ' -f1-2 {output_prefix}/{file_name}_no_dups.fam > {output_prefix}/new_fam_ids.txt",
+        "ori_fam_ids" : f"cut -d' ' -f1-2 {input_prefix}.fam > {output_prefix}/ori_fam_ids.txt",
+        "new_to_old_map" : f"paste -d' ' {output_prefix}/new_fam_ids.txt {output_prefix}/ori_fam_ids.txt > {output_prefix}/update_fam_ids.txt",
         "update_fam_ids" : f"{plink} --bfile {output_prefix}/{file_name}_no_dups --update-ids {output_prefix}/update_fam_ids.txt --make-bed --out {output_prefix}/{file_name}"
         }
 
