@@ -39,7 +39,8 @@ Generate Plink update files by chromosome/coordinate of BIM entry.
 ```
 usage: snptk map-using-coord
          [--help]
-         [--bim-offset BIM_OFFSET]
+         [--bim-offset OFFSET]
+         [--dbsnp-offset OFFSET]
          [--keep-multi]
          [--keep-unmapped-rs-ids]
          [--skip-rs-ids]
@@ -53,7 +54,8 @@ output_map_dir
 
 optional arguments:
 --help, -h               Show this help message and exit
---bim-offset BIM_OFFSET  Add BIM_OFFSET to each BIM entry coordinate
+--bim-offset OFFSET      Add OFFSET to each BIM entry coordinate
+--dbsnp-offset OFFSET    Add OFFSET to each DBSNP coordinate
 --keep-multi             If coordinate maps to multiple RS IDs, write out Chrom Coord RSID,RSID,... into multi.txt
 --keep-unmapped-rs-ids   If entry starts with rs and is not in dbsnp, keep it anyways
 --skip-rs-ids            Do not update/delete any entry which starts with rs
@@ -81,7 +83,8 @@ If `--skip-rs-ids` is specified, do not add any variant id that starts with the 
 ```
 usage: snptk map-using-rs-id
          [--help]
-         [--bim-offset BIM_OFFSET]
+         [--bim-offset OFFSET]
+         [--dbsnp-offset OFFSET]
          [--include-file INCLUDE_FILE]
          --dbsnp DBSNP
          --refsnp-merged FILE|DIR
@@ -94,7 +97,8 @@ positional arguments:
 
 optional arguments:
   --help, -h                            Show this help message and exit
-  --bim-offset BIM_OFFSET               Add BIM_OFFSET to each BIM entry coordinate
+  --bim-offset OFFSET                   Add OFFSET to each BIM entry coordinate
+  --dbsnp-offset OFFSET                 Add OFFSET to each DBSNP coordinate
   --include-file INCLUDE_FILE           Do not remove variant ids listed in this file
   --dbsnp DBSNP, -d DBSNP               NCBI dbSNP SNPChrPosOnRef file or directory with split-files
   --refsnp-merged FILE|DIR, -r FILE|DIR Tab-separated gzipped file (or directory w/ gzipped split-files) generated from NCBI refsnp-

@@ -14,6 +14,7 @@ def map_using_rs_id(args):
     dbsnp_fname = args["dbsnp"]
     include_file = args["include_file"]
     refsnp_merged_fname = args["refsnp_merged"]
+    dbsnp_offset = args["dbsnp_offset"]
 
     bim_fname = args["input_bim"]
     output_map_dir = args["output_map_dir"]
@@ -37,6 +38,7 @@ def map_using_rs_id(args):
         snptk.core.load_dbsnp_by_snp_id,
         dbsnp_fname,
         set([snp for pair in snp_map for snp in pair]),
+        dbsnp_offset,
         merge_method="update")
 
     # Generate edit instructions
@@ -122,6 +124,7 @@ def map_using_coord(args):
     bim_fname = args["input_bim"]
     bim_offset = args["bim_offset"]
     dbsnp_fname = args["dbsnp"]
+    dbsnp_offset = args["dbsnp_offset"]
     output_map_dir = args["output_map_dir"]
 
     keep_multi = args["keep_multi"]
@@ -139,7 +142,7 @@ def map_using_coord(args):
         snps.add(entry["snp_id"])
         coordinates.add(entry["chromosome"] + ":" + entry["position"])
 
-    dbsnp = snptk.core.execute_load(snptk.core.load_dbsnp_by_coordinate, dbsnp_fname, coordinates, merge_method="extend")
+    dbsnp = snptk.core.execute_load(snptk.core.load_dbsnp_by_coordinate, dbsnp_fname, coordinates, dbsnp_offset, merge_method="extend")
 
     snps_to_delete, snps_to_update, multi_snps = map_using_coord_logic(bim_entries, snps, dbsnp, keep_multi, keep_unmapped_rsids, skip_rs_ids)
 

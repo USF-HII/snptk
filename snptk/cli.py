@@ -31,6 +31,7 @@ def main():
     map_using_coord.add_argument("--skip-rs-ids", action="store_true", help="Do not update/delete any entry which starts with rs")
 
     map_using_coord.add_argument("--dbsnp", "-d", required=True, help="NCBI dbSNP SNPChrPosOnRef file or directory with split-files")
+    map_using_coord.add_argument("--dbsnp-offset", type=int, default=0, help="Add DBSNP_OFFSET to each DBSNP coordinate")
 
     map_using_coord.add_argument("input_bim")
     map_using_coord.add_argument("output_map_dir")
@@ -51,6 +52,7 @@ def main():
     map_using_rs_id.add_argument("--include-file", help="Do not remove variant ids listed in this file")
 
     map_using_rs_id.add_argument("--dbsnp", "-d", required=True,metavar="FILE|DIR",  help="NCBI dbSNP SNPChrPosOnRef file or directory w/ split-files")
+    map_using_rs_id.add_argument("--dbsnp-offset", type=int, default=0, help="Add DBSNP_OFFSET to each DBSNP coordinate")
     map_using_rs_id.add_argument("--refsnp-merged", "-r", required=True, metavar="FILE|DIR", help="Tab-separated gzipped file (or directory w/ split-files) generated from NCBI refsnp-merged.json.bz2")
 
     map_using_rs_id.add_argument("input_bim")
