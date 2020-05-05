@@ -218,7 +218,7 @@ def cmd(commands, dryrun=False):
         print(command, file=sys.stderr)
         print(file=sys.stderr)
         if not dryrun:
-            subprocess.call(command, shell=True)
+            subprocess.run(command, shell=True, check=True)
 
 
 def ensure_dir(path, name="directory"):
