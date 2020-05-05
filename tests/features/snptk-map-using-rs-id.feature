@@ -5,10 +5,10 @@ Feature: SnpTk Map Using RS Id
     Read in:
     - test.bim
     - dbsnp.gz
-    - rsmerge.gz
+    - refsnp-merged.gz
 
     Write out:
-    - updated_snps.txt - Variant ids that should be updated (variant id, new variant id) (uses rsmerge)
+    - updated_snps.txt - Variant ids that should be updated (variant id, new variant id) (uses refsnp-merged)
     - deleted_snps.txt - Variant ids that should be removed (variant id) (uses dbsnp)
     - coord_update.txt - Updated coordinates (variant id, coordinate) (uses dbsnp)
     - chr_update.txt - Updated chromosome (variant id, chromosome) (uses dbsnp)
@@ -20,11 +20,11 @@ Feature: SnpTk Map Using RS Id
         And dbsnp.gz with
             | variant_id | chromosome | coordinate |
             | 456        | 1          | 2222       |
-        And rsmerge.gz with
+        And refsnp-merged.gz with
             | old  | new  |
             | 9999 | 1111 |
 
-        When we run snptk map-using-rs-id --rsmerge=rsmerge.gz --dbsnp=dbsnp.gz test.bim .
+        When we run snptk map-using-rs-id --refsnp-merged=refsnp-merged.gz --dbsnp=dbsnp.gz test.bim .
 
         Then updated_snps.txt should be empty
         And deleted_snps.txt should be
@@ -40,11 +40,11 @@ Feature: SnpTk Map Using RS Id
         And dbsnp.gz with
             | variant_id | chromosome | coordinate |
             | 456        | 1          | 1111       |
-        And rsmerge.gz with
+        And refsnp-merged.gz with
             | old  | new |
             | 123  | 456 |
 
-        When we run snptk map-using-rs-id --rsmerge=rsmerge.gz --dbsnp=dbsnp.gz test.bim .
+        When we run snptk map-using-rs-id --refsnp-merged=refsnp-merged.gz --dbsnp=dbsnp.gz test.bim .
 
         Then updated_snps.txt should be
             | rs123 | rs456 |
@@ -60,11 +60,11 @@ Feature: SnpTk Map Using RS Id
         And dbsnp.gz with
             | variant_id | chromosome | coordinate |
             | 456        | 1          | 2222       |
-        And rsmerge.gz with
+        And refsnp-merged.gz with
             | old  | new |
             | 123  | 456 |
 
-        When we run snptk map-using-rs-id --rsmerge=rsmerge.gz --dbsnp=dbsnp.gz test.bim .
+        When we run snptk map-using-rs-id --refsnp-merged=refsnp-merged.gz --dbsnp=dbsnp.gz test.bim .
 
         Then updated_snps.txt should be
             | rs123 | rs456 |
@@ -87,11 +87,11 @@ Feature: SnpTk Map Using RS Id
             | variant_id | chromosome | coordinate |
             | 123        | 1          | 1111       |
             | 456        | 1          | 1111       |
-        And rsmerge.gz with
+        And refsnp-merged.gz with
             | old  | new |
             | 123  | 456 |
 
-        When we run snptk map-using-rs-id --rsmerge=rsmerge.gz --dbsnp=dbsnp.gz test.bim .
+        When we run snptk map-using-rs-id --refsnp-merged=refsnp-merged.gz --dbsnp=dbsnp.gz test.bim .
 
         Then updated_snps.txt should be empty
         And deleted_snps.txt should be
@@ -109,11 +109,11 @@ Feature: SnpTk Map Using RS Id
             | variant_id | chromosome | coordinate |
             | 123        | 1          | 1111       |
             | 456        | 2          | 2222       |
-        And rsmerge.gz with
+        And refsnp-merged.gz with
             | old  | new |
             | 123  | 456 |
 
-        When we run snptk map-using-rs-id --rsmerge=rsmerge.gz --dbsnp=dbsnp.gz test.bim .
+        When we run snptk map-using-rs-id --refsnp-merged=refsnp-merged.gz --dbsnp=dbsnp.gz test.bim .
 
         Then updated_snps.txt should be empty
         And deleted_snps.txt should be
@@ -132,14 +132,14 @@ Feature: SnpTk Map Using RS Id
         And dbsnp.gz with
             | variant_id | chromosome | coordinate |
             | 456        | 1          | 1111       |
-        And rsmerge.gz with
+        And refsnp-merged.gz with
             | old  | new |
             | 111  | 222 |
         And include.gz with
             | variant_id |
             | 123        |
 
-        When we run snptk map-using-rs-id --rsmerge=rsmerge.gz --dbsnp=dbsnp.gz --include-file=include.gz test.bim .
+        When we run snptk map-using-rs-id --refsnp-merged=refsnp-merged.gz --dbsnp=dbsnp.gz --include-file=include.gz test.bim .
 
         Then updated_snps.txt should be empty
         And deleted_snps.txt should be empty
@@ -154,14 +154,14 @@ Feature: SnpTk Map Using RS Id
         And dbsnp.gz with
             | variant_id | chromosome | coordinate |
             | 123        | 1          | 1111       |
-        And rsmerge.gz with
+        And refsnp-merged.gz with
             | old  | new |
             | 456  | 789 |
         And include.gz with
             | variant_id  |
             | 789 |
 
-        When we run snptk map-using-rs-id --rsmerge=rsmerge.gz --dbsnp=dbsnp.gz --include-file=include.gz test.bim .
+        When we run snptk map-using-rs-id --refsnp-merged=refsnp-merged.gz --dbsnp=dbsnp.gz --include-file=include.gz test.bim .
 
         Then updated_snps.txt should be
             | rs456  | rs789 |

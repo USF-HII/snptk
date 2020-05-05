@@ -9,8 +9,9 @@ The SNP Toolkit (SNPTk) analyzes and updates [Plink](https://www.cog-genomics.or
   - [map-using-coord](#map-using-coord)
   - [map-using-rs-id](#map-using-rs-id)
   - [remove-duplicates](#remove-duplicates)
-  - [update-from-map](#update-from-map)
+  - [upate-from-map)
 - [Plink Update Files](#plink-update-files)
+- [RefSNP Merged](#refsnp-merged)
 - [Concepts](#Concepts)
   - [dbSNP](#dbSNP)
   - [refSNP](#RefSNP)
@@ -84,7 +85,7 @@ usage: snptk map-using-rs-id
          [--bim-offset BIM_OFFSET]
          [--include-file INCLUDE_FILE]
          --dbsnp DBSNP
-         --rsmerge RSMERGE
+         --refsnp-merged FILE|DIR
          input_bim
          output_map_dir
 
@@ -93,11 +94,13 @@ positional arguments:
   output_map_dir
 
 optional arguments:
-  --help, -h                     Show this help message and exit
-  --bim-offset BIM_OFFSET        Add BIM_OFFSET to each BIM entry coordinate
-  --include-file INCLUDE_FILE    Do not remove variant ids listed in this file
-  --dbsnp DBSNP, -d DBSNP        NCBI dbSNP SNPChrPosOnRef file or directory with split-files
-  --rsmerge RSMERGE, -r RSMERGE  NCBI RsMergeArch file or directory with split-files
+  --help, -h                            Show this help message and exit
+  --bim-offset BIM_OFFSET               Add BIM_OFFSET to each BIM entry coordinate
+  --include-file INCLUDE_FILE           Do not remove variant ids listed in this file
+  --dbsnp DBSNP, -d DBSNP               NCBI dbSNP SNPChrPosOnRef file or directory with split-files
+  --refsnp-merged FILE|DIR, -r FILE|DIR Tab-separated gzipped file (or directory w/ gzipped split-files) generated from NCBI refsnp-
+                                        merged.json.bz2
+
 ```
 
 The subcommand will will generate update files under `output_map_dir` which will be created if it does not exist:
@@ -107,6 +110,8 @@ The subcommand will will generate update files under `output_map_dir` which will
 - `chr_update.txt` - contains entries in thhe form `<variant_id><TAB><new_chromosome>`
 
 See: [Plink Update Files](#plink-update-files) for how to apply these using Plink.
+
+Instructions for generating the `--refsnp-merged` tab-separated gzipped file (or directory with gzipped split-files) is explained in the [refsnp-merged](#refsnp-merged) section below.
 
 Normally variant ids that do not map to SNPChrPosOnRef are added to the list of variant ids to be deleted.
 If the option `--include-file INCLUDE_FILE` is specified, variant ids in `INCLUDE_FILE` that are not
@@ -187,6 +192,47 @@ plink --make-bed --update-name updated_snps.txt --bfile new.deleted --out new.up
 plink --make-bed --update-name coord_update.txt --bfile new.updated_snps --out new.coord_update
 plink --make-bed --update-name chr_update.txt --bfile new.coord_update --out new
 ```
+
+## RefSNP Merged
+
+The `map-using-rs-id` subcommand option `--refsnp-merged` expects a gzipped tab-separated file or directory containing
+split-files generated from the NCBI SNP JSON file <https://ftp.ncbi.nih.gov/snp/latest_release/JSON/refsnp-merged.json.bz2>.
+
+This file contains Reference SNP IDs that have been merged, which means that on newer genome assemblies,
+the Reference SNP ID is now located at the same coordinate as a previous SNP.
+We "merge" or update the newer Reference SNP ID to the older Reference SNP ID.
+
+For example, imagine `rs456` originally maps to `chr1:5555` and `rs123` maps to `chr1:2222`. On a newer
+genome assembly, it is discovered `rs456` actually maps to `chr1:2222`. There will therefore
+be an entry specifying `rs456<tab>rs123` indicating we should change `rs456` to `rs123` since it maps
+to the same location.
+
+The information contained in the new `refsnp-merged.json.bz2` file was previously maintained in the dbSNP [RsMergeArch](https://www.ncbi.nlm.nih.gov/projects/SNP/snp_db_table_description.cgi?t=RsMergeArch) file.
+
+### Generate Single File
+
+Steps to generate a single gzipped tab-separated file using the SNPTk Utility `bin/extract-refsnp-merged.py`
+
+```
+mkdir tmp
+curl -s https://ftp.ncbi.nih.gov/snp/latest_release/JSON/refsnp-merged.json.bz2 > tmp/refsnp-merged.json.bz2
+python3 bin/extract-refsnp-merged.py tmp/refsnp-merged.json.bz2 tmp/refsnp-merged.gz
+```
+
+### Generate Directory with Split-Files
+
+If you are running SNPTk on a multi-processor system, you can createda directory of split files and SNPTk will
+load these in parallel to speed execution time.
+
+Steps to generate a directory of 32 split gzipped tab-separated files using the SNPTk Utility `bin/extract-refsnp-merged.py`
+
+```
+mkdir tmp
+curl -s https://ftp.ncbi.nih.gov/snp/latest_release/JSON/refsnp-merged.json.bz2 > tmp/refsnp-merged.json.bz2
+python3 bin/extract-refsnp-merged.py --split=32 tmp/refsnp-merged.json.bz2 tmp/refsnp-merged.d/
+```
+
+(This will create `tmp/refsnp-merged.d/01.gz`, `tmp/refsnp-merged.d/02.gz`, ... `tmp/refsnp-merged.d/32.gz`)
 
 ## Concepts
 

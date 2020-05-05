@@ -13,7 +13,7 @@ def map_using_rs_id(args):
     bim_offset = args["bim_offset"]
     dbsnp_fname = args["dbsnp"]
     include_file = args["include_file"]
-    rs_merge_fname = args["rsmerge"]
+    refsnp_merged_fname = args["refsnp_merged"]
 
     bim_fname = args["input_bim"]
     output_map_dir = args["output_map_dir"]
@@ -22,14 +22,14 @@ def map_using_rs_id(args):
 
     unmappable_snps = snptk.core.load_include_file(include_file)
 
-    rs_merge = snptk.core.execute_load(snptk.core.load_rs_merge, rs_merge_fname, merge_method="update")
+    refsnp_merged = snptk.core.execute_load(snptk.core.load_refsnp_merged, refsnp_merged_fname, merge_method="update")
 
     # Build a list of tuples with the original snp_id and updated_snp_id
     snp_map = []
 
     for entry in snptk.core.load_bim(bim_fname, offset=bim_offset):
         snp_id = entry["snp_id"]
-        snp_id_new = snptk.core.update_snp_id(snp_id, rs_merge)
+        snp_id_new = snptk.core.update_snp_id(snp_id, refsnp_merged)
         snp_map.append((snp_id, entry["chromosome"] + ":" + entry["position"], snp_id_new))
 
     # Load dbsnp by snp_id

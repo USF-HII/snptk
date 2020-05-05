@@ -53,7 +53,7 @@ def execute_load(load_func, fname, *args, merge_method="update"):
     return result
 
 
-def update_snp_id(snp_id, rs_merge):
+def update_snp_id(snp_id, refsnp_merged):
     """
     Pass SNP Id and using RsMerge return the merged SNP Id or the same if unchanged  if the SNP has been removed by NCBI.
 
@@ -67,29 +67,29 @@ def update_snp_id(snp_id, rs_merge):
         return snp_id
 
     # snp has no merge history
-    if snp_id not in rs_merge:
+    if snp_id not in refsnp_merged:
         return "rs" + snp_id
 
-    while snp_id in rs_merge:
-        snp_id = rs_merge[snp_id]
+    while snp_id in refsnp_merged:
+        snp_id = refsnp_merged[snp_id]
 
     return "rs" + snp_id
 
 
-def load_rs_merge(fname):
-    rs_merge = {}
+def load_refsnp_merged(fname):
+    refsnp_merged = {}
 
-    debug(f"Loading rs merge file '{fname}'...")
+    debug(f"Loading refsnp_merged file '{fname}'...")
 
     with gzip.open(fname, "rt", encoding="utf-8") as f:
         for line in f:
             fields = line.strip().split()
             rsid, merged_rsid = fields[0], fields[1]
-            rs_merge[rsid] = merged_rsid
+            refsnp_merged[rsid] = merged_rsid
 
-    debug(f"Complete loading rs merge file '{fname}'...")
+    debug(f"Complete loading refsnp_merged file '{fname}'...")
 
-    return rs_merge
+    return refsnp_merged
 
 
 def load_bim(fname, offset=0):

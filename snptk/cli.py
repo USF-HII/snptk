@@ -5,7 +5,7 @@ import snptk.app
 import snptk.release
 
 def main():
-    help_fmt = lambda prog: argparse.HelpFormatter(prog, max_help_position=40, width=132)
+    help_fmt = lambda prog: argparse.HelpFormatter(prog, max_help_position=42, width=132)
 
     parser = argparse.ArgumentParser(prog="snptk", formatter_class=help_fmt, add_help=False)
     parser.add_argument("--help", "-h", action="help", help="Show this help message and exit")
@@ -50,8 +50,8 @@ def main():
     map_using_rs_id.add_argument("--bim-offset", type=int, default=0, help="Add BIM_OFFSET to each BIM entry coordinate")
     map_using_rs_id.add_argument("--include-file", help="Do not remove variant ids listed in this file")
 
-    map_using_rs_id.add_argument("--dbsnp", "-d", required=True, help="NCBI dbSNP SNPChrPosOnRef file or directory with split-files")
-    map_using_rs_id.add_argument("--rsmerge", "-r", required=True, help="NCBI RsMergeArch file or directory with split-files")
+    map_using_rs_id.add_argument("--dbsnp", "-d", required=True,metavar="FILE|DIR",  help="NCBI dbSNP SNPChrPosOnRef file or directory w/ split-files")
+    map_using_rs_id.add_argument("--refsnp-merged", "-r", required=True, metavar="FILE|DIR", help="Tab-separated gzipped file (or directory w/ split-files) generated from NCBI refsnp-merged.json.bz2")
 
     map_using_rs_id.add_argument("input_bim")
     map_using_rs_id.add_argument("output_map_dir")

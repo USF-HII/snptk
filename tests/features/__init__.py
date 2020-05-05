@@ -82,7 +82,7 @@ def should_be(self, fname, description):
         assert_equal(tuple(self.table), tuple(lines))
 
 
-@step(r"(test.bim|dbsnp.gz|rsmerge.gz|include.gz) with")
+@step(r"(test.bim|dbsnp.gz|refsnp-merged.gz|include.gz) with")
 def test_bim_with(self, fname):
     write_tsv(fname, self.table[1:])
 
