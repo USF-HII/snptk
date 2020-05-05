@@ -9,7 +9,7 @@ The SNP Toolkit (SNPTk) analyzes and updates [Plink](https://www.cog-genomics.or
   - [map-using-coord](#map-using-coord)
   - [map-using-rs-id](#map-using-rs-id)
   - [remove-duplicates](#remove-duplicates)
-  - [upate-from-map)
+  - [upate-from-map](#update-from-map)
 - [Plink Update Files](#plink-update-files)
 - [RefSNP Merged](#refsnp-merged)
 - [Concepts](#Concepts)
@@ -60,7 +60,7 @@ optional arguments:
 --dbsnp DBSNP, -d DBSNP  NCBI dbSNP SNPChrPosOnRef file or directory with split-files
 ```
 
-The subcommand will will generate update files under `output_map_dir` which will be created if it does not exist:
+The subcommand will generate update files under `output_map_dir` (which is created if it does not exist):
 - `deleted_snps.txt` - contains entries in the form `<variant_id>`
 - `updated_snps.txt` - contains entries in the form `<variant_id><TAB><new_rs_id>`
 
@@ -72,8 +72,7 @@ Normally, if the chromosome/coordinate map to more than one entry in the NCBI db
 variant id is added to `deleted_snps.txt`. If `--keep-multi` is specified, we use the first entry
 that maps and write out all matching entries to the file `multi.txt` in the format `chromosome:position<tab>rsid,rsid[,rsid...]`.
 
-If `--keep-unmapped-rs-ids` is specified, if the variant id starts with the string `rs`, do not add it to `deleted_snps.txt` if
-its chromosome/position does not map to an entry in SNPChrPosOnRef.
+If `--keep-unmapped-rs-ids` is specified and the variant id starts with the string `rs`, do not add it to `deleted_snps.txt` if its chromosome/position does not map to an entry in SNPChrPosOnRef.
 
 If `--skip-rs-ids` is specified, do not add any variant id that starts with the string `rs` to either `deleted_snps.txt` or `updated_snps.txt`.
 
@@ -100,10 +99,9 @@ optional arguments:
   --dbsnp DBSNP, -d DBSNP               NCBI dbSNP SNPChrPosOnRef file or directory with split-files
   --refsnp-merged FILE|DIR, -r FILE|DIR Tab-separated gzipped file (or directory w/ gzipped split-files) generated from NCBI refsnp-
                                         merged.json.bz2
-
 ```
 
-The subcommand will will generate update files under `output_map_dir` which will be created if it does not exist:
+The subcommand will generate update files under `output_map_dir` (which is created if it does not exist):
 - `deleted_snps.txt` - contains entries in the form `<variant_id>`
 - `updated_snps.txt` - contains entries in the form `<variant_id><TAB><new_rs_id>`
 - `coord_update.txt` - contains entries in the form `<variant_id><TAB><new_coordinate>`
@@ -113,7 +111,7 @@ See: [Plink Update Files](#plink-update-files) for how to apply these using Plin
 
 Instructions for generating the `--refsnp-merged` tab-separated gzipped file (or directory with gzipped split-files) is explained in the [refsnp-merged](#refsnp-merged) section below.
 
-Normally variant ids that do not map to SNPChrPosOnRef are added to the list of variant ids to be deleted.
+Normally variant ids that do not map to [SNPChrPosOnRef](#SNPChrPosOnRef) are added to the list of variant ids to be deleted.
 If the option `--include-file INCLUDE_FILE` is specified, variant ids in `INCLUDE_FILE` that are not
 in SNPChrPosOnRef (before or after merging) are not added to the list to be deleted.
 
@@ -198,6 +196,9 @@ plink --make-bed --update-name chr_update.txt --bfile new.coord_update --out new
 The `map-using-rs-id` subcommand option `--refsnp-merged` expects a gzipped tab-separated file or directory containing
 split-files generated from the NCBI SNP JSON file <https://ftp.ncbi.nih.gov/snp/latest_release/JSON/refsnp-merged.json.bz2>.
 
+**Note** - If you wish to use a build-specific version of `refsnp-merged.json.bz2`, for example Build 153, the JSON
+file to download would be <https://ftp.ncbi.nih.gov/snp/archive/b153/JSON/refsnp-merged.json.bz2>.
+
 This file contains Reference SNP IDs that have been merged, which means that on newer genome assemblies,
 the Reference SNP ID is now located at the same coordinate as a previous SNP.
 We "merge" or update the newer Reference SNP ID to the older Reference SNP ID.
@@ -255,30 +256,4 @@ with the following tab-separated format (from: <https://www.ncbi.nlm.nih.gov/SNP
 - `neighbor_snp_list` - Internal use
 - `isPAR` - The SNP is in Pseudoautosomal Region (PAR) region when isPAR value is `y`
 
-As of Build 152 the information once held in SNPChrPosOnRef is now contained in a much richer JSON format.
-
-#### GRCh38 JSON Files
-
-The latest JSON files for GRCh38 are found at <https://ftp.ncbi.nih.gov/snp/latest_release/JSON/>.
-
-Specific builds of these JSON files are found under <https://ftp.ncbi.nih.gov/snp/archive/> (e.g. for Build 153
-you would find the files at <https://ftp.ncbi.nih.gov/snp/archive/b153/JSON/>).
-
-We can create a SNPChrPosOnRef file using the [bin/snptk-parse-json.py](bin/snptk-parse-json.py) tool found in this repository.
-
-The following example shows how to build a SNPChrPosOnRef file from GRCh38 Build 153 using bash:
-```
-temp=tmp/SNPChrPosOnRef/GRCh38/b153
-
-mkdir -p ${temp}
-
-chromosomes=$(echo {1..22} X Y MT)
-
-for chr in ${chromosomes}; do
-  curl https://ftp.ncbi.nih.gov/snp/archive/b153/JSON/refsnp-chr${chr}.json.bz2 > ${temp}/${chr}.json.bz2
-
-  bin/snptk-parse-json.py --method dbsnp --outfile ${temp}/${chr}.tsv ${temp}/${chr}.json.bz2
-done
-
-cat $(for chr in ${chromosomes}; do echo ${temp}/${chr}.tsv.gz; done) > ${temp}/b153_SNPChrPosOnRef.bcp.gz
-```
+**Note** - As of Build 152 the information once held in SNPChrPosOnRef is now contained in a much richer JSON format (See: <https://ftp.ncbi.nih.gov/snp/latest_release/JSON/>) and we plan to incorporate this in the near future.
