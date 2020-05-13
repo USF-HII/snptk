@@ -44,21 +44,10 @@ def map_using_rs_id(args):
     # Generate edit instructions
     snps_to_delete, snps_to_update, coords_to_update, chromosomes_to_update = map_using_rs_id_logic(snp_map, dbsnp, unmappable_snps)
 
-    with open(join(output_map_dir, "deleted_snps.txt"), "w") as f:
-        for snp_id in snps_to_delete:
-            print(snp_id, file=f)
-
-    with open(join(output_map_dir, "updated_snps.txt"), "w") as f:
-        for snp_id, snp_id_new in snps_to_update:
-            print(snp_id + "\t" + snp_id_new, file=f)
-
-    with open(join(output_map_dir, "coord_update.txt"), "w") as f:
-        for snp_id, coord_new in coords_to_update:
-            print(snp_id + "\t" + coord_new, file=f)
-
-    with open(join(output_map_dir, "chr_update.txt"), "w") as f:
-        for snp_id, chromosome in chromosomes_to_update:
-            print(snp_id + "\t" + chromosome, file=f)
+    write_map(output_map_dir, "deleted_snps.txt", snps_to_delete)
+    write_map(output_map_dir, "updated_snps.txt", snps_to_update)
+    write_map(output_map_dir, "coord_update.txt", coords_to_update)
+    write_map(output_map_dir, "chr_update.txt", chromosomes_to_update)
 
 
 def map_using_rs_id_logic(snp_map, dbsnp, unmappable_snps):
@@ -146,18 +135,11 @@ def map_using_coord(args):
 
     snps_to_delete, snps_to_update, multi_snps = map_using_coord_logic(bim_entries, snps, dbsnp, keep_multi, keep_unmapped_rsids, skip_rs_ids)
 
-    with open(join(output_map_dir, "deleted_snps.txt"), "w") as f:
-        for snp_id in snps_to_delete:
-            print(snp_id, file=f)
+    write_map(output_map_dir, "deleted_snps.txt", snps_to_delete)
+    write_map(output_map_dir, "updated_snps.txt", snps_to_update)
 
-    with open(join(output_map_dir, "updated_snps.txt"), "w") as f:
-        for snp_id, snp_id_new in snps_to_update:
-            print(snp_id + "\t" + snp_id_new, file=f)
-
-    if len(multi_snps) > 0:
-        with open(join(output_map_dir, "multi.txt"), "w") as f:
-            for chr_pos, mappings in multi_snps:
-                print(chr_pos + "\t" + ",".join(mappings), file=f)
+    if multi_snps:
+        write_map(output_map_dir, "multi.txt", [(chr_pos, ",".join(mappings)) for chr_pos, mappings in multi_snps])
 
 
 def map_using_coord_logic(bim_entries, snps, dbsnp, keep_multi=False, keep_unmapped_rsids=False, skip_rs_ids=False):
@@ -260,3 +242,11 @@ def update_from_map(args):
         sys.exit(1)
 
     snptk.core.cmd(commands, dry_run)
+
+
+def write_map(dir, fname, entries):
+    with open(os.path.join(dir, fname), "w") as f:
+        for entry in entries:
+            if isinstance(entry, tuple):
+                entry = "\t".join(entry)
+            print(entry, file=f)
