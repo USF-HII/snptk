@@ -1,3 +1,8 @@
+# NOTE: In tests/features/__init__.py we add the option --dbsnp-offset=0 to the snptk
+# map-using-rs-id and map-using-coord subcommands to make the tests more readable.
+# In the actual SNPChrPosOnRef file (and refsnp-<chromosome>.json.bz2 files) the default
+# (--dbsnp-offset=1) is correct.
+
 Feature: SnpTk Map Using RS Id
 
     Given a PLINK extended MAP file (.bim) (https://www.cog-genomics.org/plink/1.9/formats#bim)

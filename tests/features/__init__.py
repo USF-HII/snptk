@@ -60,8 +60,11 @@ def we_run_snptk(self, subcommand, args):
         cmd_string += f" --plink {PLINK}"
         cmd_string += f" --bcftools '/shares/hii/sw/singularity/latest/bin/singularity exec --bind /shares:/shares --bind /hii/work:/hii/work /shares/hii/images/bioinfo/htslib/latest.simg bcftools'"
 
-    if subcommand == "update-from-map":
+    elif subcommand == "update-from-map":
         cmd_string += f" --plink {PLINK}"
+
+    else:
+        cmd_string += " --dbsnp-offset=0 "
 
     cmd_string += " " + args
 
