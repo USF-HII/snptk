@@ -1,10 +1,10 @@
-all: test lint
+all: test bdd
 
 test:
 	python -m unittest tests/test_*
 
 bdd:
-	aloe -vd tests/features/*.feature
+	aloe --stop --detailed-errors --verbose tests/features/*.feature
 
 lint:
 	-pylint snptk/*
