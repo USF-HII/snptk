@@ -56,6 +56,8 @@ def map_using_rs_id_logic(snp_map, dbsnp, unmappable_snps):
     coords_to_update = []
     chromosomes_to_update = []
 
+    snps_already_updated = set()
+
     for snp_id, original_coord, snp_id_new in snp_map:
         # If the snp has been updated (merged)
         if snp_id_new != snp_id:
@@ -65,7 +67,15 @@ def map_using_rs_id_logic(snp_map, dbsnp, unmappable_snps):
                 snps_to_delete.append(snp_id)
 
             elif snp_id_new in dbsnp:
+
+                # If snp already being updated avoids duplicate snps
+                if snp_id_new in snps_already_updated:
+                    snps_to_delete.append(snp_id)
+                    continue
+
                 snps_to_update.append((snp_id, snp_id_new))
+                snps_already_updated.add(snp_id_new)
+
                 debug(f"original_coord={original_coord} updated_coord={dbsnp[snp_id_new]}", level=2)
 
                 new_chromosome, new_position = dbsnp[snp_id_new].split(":")
@@ -79,7 +89,15 @@ def map_using_rs_id_logic(snp_map, dbsnp, unmappable_snps):
 
             # If snp_id is updated to snp_id_new but unable to update chromosome and position
             elif snp_id_new in unmappable_snps:
+
+                # If snp already being updated avoids duplicate snps
+                if snp_id_new in snps_already_updated:
+                    snps_to_delete.append(snp_id)
+                    continue
+
                 snps_to_update.append((snp_id, snp_id_new))
+                snps_already_updated.add(snp_id_new)
+
                 debug(f"{snp_id} was updated to {snp_id_new} but cannot be updated by chr:position due to having multiple positions inside of GRCh37 VCF file")
 
             else:

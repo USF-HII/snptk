@@ -173,3 +173,30 @@ Feature: SnpTk Map Using RS Id
         And deleted_snps.txt should be empty
         And coord_update.txt should be empty
         And chr_update.txt should be empty
+
+    Scenario: Two different rsids merging to the same rsid
+        Given test.bim with
+            | chromosome  | variant_id | position | coordinate | allele_1 | allele_2 |
+            | 1           | rs123      | 0        | 1111       | A        | C        |
+            | 1           | rs456      | 0        | 2222       | A        | C        |
+        And dbsnp.gz with
+            | variant_id | chromosome | coordinate |
+            | 123        | 1          | 1111       |
+            | 456        | 1          | 2222       |
+            | 789        | 1          | 3333       |
+        And refsnp-merged.gz with
+            | old  | new |
+            | 123  | 789 |
+            | 456  | 789 |
+        And include.gz with
+            | variant_id  |
+
+        When we run snptk map-using-rs-id --refsnp-merged=refsnp-merged.gz --dbsnp=dbsnp.gz --include-file=include.gz test.bim .
+
+        Then updated_snps.txt should be
+            | rs123  | rs789 |
+        And deleted_snps.txt should be
+            | rs456  |
+        And coord_update.txt should be
+            | rs789  | 3333 |
+        And chr_update.txt should be empty

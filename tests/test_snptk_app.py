@@ -112,6 +112,21 @@ class TestSnpTkAppUpdateLogicUpdateSnpIdAndPosition(unittest.TestCase):
 
         self.assertEqual(snptk.app.map_using_rs_id_logic(snp_map, dbsnp, unmappable_snps), expected)
 
+    def test_test(self):
+        snp_map = [('rs123', '6:222', 'rs789'),
+                   ('rs456', '6:123', 'rs789')]
+
+        dbsnp = {'rs123': '6:222',
+                 'rs456': '6:123',
+                 'rs789' : '6:333'}
+
+        unmappable_snps = set()
+
+        expected = UpdateLogicOutput(
+                snps_del=['rs456'], snps_up=[('rs123', 'rs789')], coords_up=[('rs789', '333')], chroms_up=[])
+
+        self.assertEqual(snptk.app.map_using_rs_id_logic(snp_map, dbsnp, unmappable_snps), expected)
+
 class TestSnpTkAppUpdateLogicSnpIdFromCoord(unittest.TestCase):
     def setUp(self):
         self.bim_entries = [{
